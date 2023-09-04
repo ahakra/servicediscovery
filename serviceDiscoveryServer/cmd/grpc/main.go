@@ -36,8 +36,11 @@ func main() {
 	// opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	server := grpc.NewServer()
-	serviceDiscoveryServer := &ServiceDiscoveryServer{Ctrl: ctrl}
-	pb.RegisterServiceDiscoveryInitServer(server, serviceDiscoveryServer)
+	serviceDiscoveryServerinit := &ServiceDiscoveryServerInit{Ctrl: ctrl}
+	serviceDicoveryServiceinfo := &ServiceDiscoveryServerInfo{Ctrl: ctrl}
+
+	pb.RegisterServiceDiscoveryInitServer(server, serviceDiscoveryServerinit)
+	pb.RegisterServiceDiscoveryInfoServer(server, serviceDicoveryServiceinfo)
 
 	listen, err := net.Listen("tcp", ":1080") // Specify your desired host and port
 	if err != nil {
