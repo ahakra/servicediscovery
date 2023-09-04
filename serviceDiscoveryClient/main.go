@@ -35,11 +35,12 @@ func main() {
 	}
 
 	defer conn.Close()
-	client := pb.NewServiceDiscoveryInitClient(conn)
+	initClient := pb.NewServiceDiscoveryInitClient(conn)
+	infoClient := pb.NewServiceDiscoveryInfoClient(conn)
 
 	registerData := &pb.RegisterData{
 		Servicename:    "logger_service",
-		Serviceaddress: "192.168.110.242:1083",
+		Serviceaddress: "192.168.110.242:1084",
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
 	}
@@ -56,18 +57,18 @@ func main() {
 	}
 	// Print the connection state
 
-	y, err := client.RegisterService(context.Background(), registerData)
+	y, err := initClient.RegisterService(context.Background(), registerData)
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(y)
-	x, err := client.UpdateServiceHealth(context.Background(), registerData)
+	x, err := initClient.UpdateServiceHealth(context.Background(), registerData)
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(x)
 
-	z, err := client.GetAllServices(context.Background(), &pb.EmptyRequest{})
+	z, err := infoClient.GetAllServices(context.Background(), &pb.EmptyRequest{})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -75,7 +76,7 @@ func main() {
 		fmt.Println(value.Servicename + " : " + value.Serviceaddress)
 	}
 
-	zz, err := client.GetByNameService(context.Background(), &pb.ServiceName{Name: "auth_service"})
+	zz, err := infoClient.GetByNameService(context.Background(), &pb.ServiceName{Name: "auth_service"})
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -83,7 +84,7 @@ func main() {
 		fmt.Println(value.Servicename + " : " + value.Serviceaddress)
 	}
 
-	zzz, err := client.DeleteService(context.Background(), &pb.ServiceGuid{Guid: "64f307dc2a79b39b7ab0ad5e"})
+	zzz, err := initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: "64f307dc2a79b39b7ab0ad5e"})
 	if err != nil {
 		fmt.Println(err)
 	}
