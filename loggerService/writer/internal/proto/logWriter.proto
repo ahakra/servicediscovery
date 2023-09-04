@@ -1,0 +1,28 @@
+syntax = "proto3";
+package logwriter;
+option go_package = "proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+service Logwriter {
+    rpc SaveLog(LogData) returns (google.protobuf.Empty) {};
+}
+
+
+message LogData{
+    string collectionName = 1;
+    LogType logType =2;
+    google.protobuf.Any data = 3;
+    google.protobuf.Timestamp createdAt = 4;
+}
+
+enum LogType {
+    LOG_TYPE_VERBOSE = 0;
+    LOG_TYPE_INFORMATION = 1;
+    LOG_TYPE_WARNING = 2;
+    LOG_TYPE_ERROR = 3;
+
+}
+
