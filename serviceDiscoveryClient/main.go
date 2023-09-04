@@ -40,7 +40,7 @@ func main() {
 
 	registerData := &pb.RegisterData{
 		Servicename:    "logger_service",
-		Serviceaddress: "192.168.110.242:1083",
+		Serviceaddress: "192.168.110.242:1084",
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
 	}
