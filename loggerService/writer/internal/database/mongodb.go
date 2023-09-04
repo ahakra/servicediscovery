@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Connect(uri string, databaseName string, collectioName string) *mongo.Database {
+func Connect(uri string, databaseName string) *mongo.Database {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

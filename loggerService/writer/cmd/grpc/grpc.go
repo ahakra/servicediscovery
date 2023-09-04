@@ -1,7 +1,20 @@
 package main
 
-import "github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
+import (
+	"context"
+
+	"github.com/ahakra/servicediscovery/loggerService/writer/internal/controller"
+	"github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
+)
 
 type LogWritter struct {
-	proto.UnimplementedLogWritterServer
+	proto.UnimplementedLogwriterServer
+	Ctrl *controller.MongoCtrl
+}
+
+func (c *LogWritter) SaveLog(ctx context.Context, in *proto.LogData) (*emptypb.Empty, error) {
+
+	c.Ctrl.SaveLog(ctx, in)
+	return nil, nil
 }
