@@ -3,9 +3,10 @@ package repository
 import (
 	"context"
 
-	pb "github.com/ahakra/servicediscovery/loggerService/writter/internal/proto"
+	pb "github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type MongoRepo interface {
@@ -22,4 +23,8 @@ func NewMongoServiceRepository(database *mongo.Database) *MongoLogRepository {
 
 func (r *MongoLogRepository) SaveLog(ctx context.Context, lgd *pb.LogData) (*emptypb.Empty, error) {
 
+	collection := r.database.Collection(lgd.CollectionName)
+	lgd.CreatedAt = timestamppb.Now()
+	collection.InsertOne(ctx, lgd)
+	return nil, nil
 }
