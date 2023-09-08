@@ -21,7 +21,8 @@ import (
 const uri = "mongodb://root:password@localhost:27017"
 const serviceDiscoveryPort = 1080
 
-var port = 1089
+var returnedguid string
+var port = 8111
 
 func main() {
 
@@ -88,10 +89,18 @@ func main() {
 	initClient := proto.NewServiceDiscoveryInitClient(conn)
 	y, err := initClient.RegisterService(context.Background(), registerData)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("returned guid:")
+		// fmt.Println(y.Data)
+		returnedguid = y.Data
+		fmt.Println(returnedguid)
+
 	}
 	fmt.Println(y)
+	returnedguid = y.Data
+	fmt.Println(returnedguid)
+
 	go func() {
+		defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
 		for {
 			registerData := &proto.RegisterData{
 				Servicename:    "logger_writer",
@@ -101,6 +110,7 @@ func main() {
 			}
 
 			_, err := initClient.UpdateServiceHealth(context.Background(), registerData)
+
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -110,7 +120,7 @@ func main() {
 	}()
 
 	defer listen.Close()
-
+	defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 
 	if err := server.Serve(listen); err != nil {

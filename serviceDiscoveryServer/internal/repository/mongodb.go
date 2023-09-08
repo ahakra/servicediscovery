@@ -39,13 +39,17 @@ func (r *MongoUserRepository) InsertService(ctx context.Context, in *pb.Register
 	if cursor.Next(ctx) {
 
 		return &pb.ReturnPayload{Data: "service already registered"}, nil
+
 	}
 
-	_, err = r.collection.InsertOne(ctx, in)
+	guid, err := r.collection.InsertOne(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.ReturnPayload{Data: "registered"}, nil
+	// Convert the _id field to a string
+	objectID := guid.InsertedID.(primitive.ObjectID)
+
+	return &pb.ReturnPayload{Data: objectID.Hex()}, nil
 }
 
 func (r *MongoUserRepository) DeleteService(ctx context.Context, in *pb.ServiceGuid) (*pb.ReturnPayload, error) {

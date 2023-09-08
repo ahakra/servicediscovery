@@ -40,7 +40,7 @@ func main() {
 
 	registerData := &pb.RegisterData{
 		Servicename:    "logger_service",
-		Serviceaddress: "192.168.110.242:1084",
+		Serviceaddress: "192.168.110.242:1kkkaasaas084",
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
 	}
@@ -84,7 +84,7 @@ func main() {
 		fmt.Println(value.Servicename + " : " + value.Serviceaddress)
 	}
 
-	zzz, err := initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: "64f307dc2a79b39b7ab0ad5e"})
+	zzz, err := initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: "64f8894153100f5a1498ac33"})
 	if err != nil {
 		fmt.Println(err)
 	}
