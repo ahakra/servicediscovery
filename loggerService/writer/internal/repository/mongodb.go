@@ -26,5 +26,5 @@ func (r *MongoLogRepository) SaveLog(ctx context.Context, lgd *pb.LogData) (*emp
 	collection := r.database.Collection(lgd.CollectionName)
 	lgd.CreatedAt = timestamppb.Now()
 	collection.InsertOne(ctx, lgd)
-	return nil, nil
+	return &emptypb.Empty{}, nil
 }
