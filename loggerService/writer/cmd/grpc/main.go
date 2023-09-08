@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/controller"
@@ -18,12 +21,16 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const uri = "mongodb://root:password@localhost:27017"
+const uri = "mongodb://localhost:27017"
 const serviceDiscoveryPort = 1080
 
-var port = 1089
+var returnedguid string
+var port = 8111
 
 func main() {
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// 	data := struct {
 	// 		name, nationality string
@@ -86,12 +93,21 @@ func main() {
 
 	defer conn.Close()
 	initClient := proto.NewServiceDiscoveryInitClient(conn)
+	
 	y, err := initClient.RegisterService(context.Background(), registerData)
 	if err != nil {
-		fmt.Println(err)
+
+		// fmt.Println(y.Data)
+		returnedguid = y.Data
+		fmt.Println("returned guid: " + returnedguid)
+
 	}
-	fmt.Println(y)
+
+	returnedguid = y.Data
+	fmt.Println("returned guid: " + returnedguid)
+
 	go func() {
+		
 		for {
 			registerData := &proto.RegisterData{
 				Servicename:    "logger_writer",
@@ -101,15 +117,26 @@ func main() {
 			}
 
 			_, err := initClient.UpdateServiceHealth(context.Background(), registerData)
+
 			if err != nil {
 				fmt.Println(err)
 			}
 			log.Println("updating service")
 			time.Sleep(10 * time.Second)
+			
 		}
+		defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
+	
 	}()
+	go func() {
+		sig := <-sigChan
+		fmt.Printf("Received signal: %v\n", sig)
 
-	defer listen.Close()
+		initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
+		listen.Close()
+
+		os.Exit(1)
+	}()
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 

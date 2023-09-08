@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const uri = "mongodb://root:password@localhost:27017"
+const uri = "mongodb://localhost:27017"
 
 func main() {
 
