@@ -15,6 +15,7 @@ type LogWritter struct {
 
 func (c *LogWritter) SaveLog(ctx context.Context, in *proto.LogData) (*emptypb.Empty, error) {
 
-	c.Ctrl.SaveLog(ctx, in)
-	return nil, nil
+	_,err := c.Ctrl.SaveLog(ctx, in)
+	
+	return &emptypb.Empty{},err
 }

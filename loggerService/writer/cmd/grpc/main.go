@@ -28,35 +28,24 @@ var returnedguid string
 var port = 8111
 
 func main() {
-
+	//creating a channel to pass when Ctrl+C is pressed
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// 	data := struct {
-	// 		name, nationality string
-	// 		age               int
-	// 		score             float64
-	// 	}{
-	// 		name:        "Anna_Hurry",
-	// 		nationality: "England",
-	// 		age:         21,
-	// 		score:       9.5,
-	// 	}
-	// //
-	// firstLog := proto.LogData{
-	// 	CollectionName: "logs",
-	// 	LogType:        proto.LogType_LOG_TYPE_INFORMATION,
-	// }
-
+	
 	db := database.Connect(uri, "loggerservice")
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
 
+	//starting logwriter service
 	server := grpc.NewServer()
 	serviceDiscoveryServerinit := &LogWritter{Ctrl: ctrl}
-
 	proto.RegisterLogwriterServer(server, serviceDiscoveryServerinit)
+	
 
+	
+	
+	//this is done so port will be dynamically created if port is in use starting from specific port number
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
 	if err != nil {
 		for {
@@ -73,8 +62,8 @@ func main() {
 		}
 	}
 
+	//Section related to registering with servicediscovery service
 	//part for service disover registeration
-
 	registerData := &proto.RegisterData{
 		Servicename:    "logger_writer",
 		Serviceaddress: "localhost:" + strconv.Itoa(port),
@@ -138,6 +127,9 @@ func main() {
 		os.Exit(1)
 	}()
 
+
+
+	//log writer service  
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 
 	if err := server.Serve(listen); err != nil {
