@@ -21,7 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const uri = "mongodb://localhost:27017"
+const uri = "mongodb://root:password@localhost:27017"
 const serviceDiscoveryPort = 1080
 
 var returnedguid string
@@ -82,7 +82,7 @@ func main() {
 
 	defer conn.Close()
 	initClient := proto.NewServiceDiscoveryInitClient(conn)
-	
+
 	y, err := initClient.RegisterService(context.Background(), registerData)
 	if err != nil {
 
@@ -96,7 +96,7 @@ func main() {
 	fmt.Println("returned guid: " + returnedguid)
 
 	go func() {
-		
+
 		for {
 			registerData := &proto.RegisterData{
 				Servicename:    "logger_writer",
@@ -112,10 +112,10 @@ func main() {
 			}
 			log.Println("updating service")
 			time.Sleep(10 * time.Second)
-			
+
 		}
 		defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
-	
+
 	}()
 	go func() {
 		sig := <-sigChan
