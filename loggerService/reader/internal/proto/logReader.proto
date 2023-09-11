@@ -1,0 +1,38 @@
+syntax = "proto3";
+package logreader;
+option go_package = "github.com/ahakra/servicediscovery/loggerService/reader/internal/proto";
+
+
+
+import "google/protobuf/timestamp.proto";
+
+
+service LogReader {
+    rpc ReadLog(LogFilter) returns (ReturnedData) ;
+}
+
+message ReturnedData {
+    repeated LogData data =1;
+}
+
+message LogFilter{
+    string collectionName = 1;
+    LogType logType =2;
+    google.protobuf.Timestamp dateFrom = 3;
+    google.protobuf.Timestamp dateTo = 4;
+}
+
+enum LogType {
+    LOG_TYPE_VERBOSE = 0;
+    LOG_TYPE_INFORMATION = 1;
+    LOG_TYPE_WARNING = 2;
+    LOG_TYPE_ERROR = 3;
+
+}
+
+message LogData{
+    string collectionName = 1;
+    LogType logType =2;
+    map<string,  string>  data = 3;
+    google.protobuf.Timestamp createdAt = 4;
+}
