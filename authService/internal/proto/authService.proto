@@ -1,0 +1,43 @@
+syntax = "proto3";
+package authService;
+option go_package = "github.com/ahakra/authService/authService/internal/proto";
+
+import "google/protobuf/timestamp.proto";
+
+service AuthService{
+	rpc Register(  RegisterInput) returns (AuthResponse);
+	rpc Login(  LoginInput) returns (AuthResponse);
+}
+
+message AuthToken {
+	string ID=1;
+	string Sub=2;
+}
+
+message AuthResponse  {
+	string AccessToken =1;
+	User User =2;
+}
+
+
+message User  {
+    string	ID      = 1;  
+	string Username = 2;
+	string Email    = 3;
+	string Password = 4;
+	google.protobuf.Timestamp CreatedAt = 5;
+	google.protobuf.Timestamp UpdatedAt = 6;
+}
+
+
+message RegisterInput{
+	string Email =1;
+	string Username = 2;
+	string Password =3;
+	string ConfirmPassword = 4;
+}
+
+message LoginInput {
+	string Email =1;
+	string Password =2;
+}
