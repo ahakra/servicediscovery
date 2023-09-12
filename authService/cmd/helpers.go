@@ -2,10 +2,23 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+
+	"github.com/ahakra/servicediscovery/authService/internal/proto"
 )
 
-func (in *proto.RegisterInput) Sanitize() {
+var (
+	UsernameMinLength = 2
+	PasswordMinLength = 6
+	emailRegexp       = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+)
+
+type RegisterInput struct {
+	*proto.RegisterInput
+}
+
+func (in *RegisterInput) Sanitize() {
 	in.Email = strings.TrimSpace(in.Email)
 	in.Email = strings.ToLower(in.Email)
 
@@ -27,6 +40,27 @@ func (in RegisterInput) Validate() error {
 
 	if in.Password != in.ConfirmPassword {
 		return fmt.Errorf("%w: confirm password must match the password", ErrValidation)
+	}
+
+	return nil
+}
+
+type LoginInput struct {
+	*proto.LoginInput
+}
+
+func (in *LoginInput) Sanitize() {
+	in.Email = strings.TrimSpace(in.Email)
+	in.Email = strings.ToLower(in.Email)
+}
+
+func (in LoginInput) Validate() error {
+	if !emailRegexp.MatchString(in.Email) {
+		return fmt.Errorf("%w: email not valid", ErrValidation)
+	}
+
+	if len(in.Password) < 1 {
+		return fmt.Errorf("%w: password required", ErrValidation)
 	}
 
 	return nil
