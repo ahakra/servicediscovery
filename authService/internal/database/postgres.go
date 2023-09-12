@@ -2,13 +2,9 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
-	"path"
-	"runtime"
 
-	"github.com/golang-migrate/migrate/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sirupsen/logrus"
@@ -57,52 +53,4 @@ func (db *DB) Ping(ctx context.Context) {
 
 func (db *DB) Close() {
 	db.Pool.Close()
-}
-
-func (db *DB) Migrate() error {
-	_, b, _, _ := runtime.Caller(0)
-
-	migrationPath := fmt.Sprintf("file:///%s/migrations", path.Dir(b))
-
-	m, err := migrate.New(migrationPath, db.conf.Database.URL)
-	if err != nil {
-		return fmt.Errorf("error create the migrate instance: %v", err)
-	}
-
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("error migrate up: %v", err)
-	}
-
-	log.Println("migration done")
-
-	return nil
-}
-
-func (db *DB) Drop() error {
-	_, b, _, _ := runtime.Caller(0)
-
-	migrationPath := fmt.Sprintf("file:///%s/migrations", path.Dir(b))
-
-	m, err := migrate.New(migrationPath, db.conf.Database.URL)
-	if err != nil {
-		return fmt.Errorf("error create the migrate instance: %v", err)
-	}
-
-	if err := m.Drop(); err != nil {
-		return fmt.Errorf("error drop: %v", err)
-	}
-
-	log.Println("migration drop")
-
-	return nil
-}
-
-func (db *DB) Truncate(ctx context.Context) error {
-	if _, err := db.Pool.Exec(ctx, `
-		DELETE FROM users;
-	`); err != nil {
-		return fmt.Errorf("error truncate: %v", err)
-	}
-
-	return nil
 }
