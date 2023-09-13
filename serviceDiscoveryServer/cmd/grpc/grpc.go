@@ -41,7 +41,7 @@ func (sd *ServiceDiscoveryServerInfo) GetAllServices(ctx context.Context, in *pb
 	return py, err
 }
 
-func (sd *ServiceDiscoveryServerInfo) GetServiceByNameSer(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
+func (sd *ServiceDiscoveryServerInfo) GetServiceByName(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
 	py, err := sd.Ctrl.GetServiceByNameSer(ctx, in)
 	return py, err
 }

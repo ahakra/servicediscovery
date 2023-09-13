@@ -7,14 +7,14 @@ services:
     ports:
       - "27017:27017"  # Map container port 27017 to host port 27017 (MongoDB default port)
     volumes:
-      - ./mongodb_data:/data/db  # Persist MongoDB data in a named volume (change if needed)
+      - ./mongodb_data_:/data/db  # Persist MongoDB data in a named volume (change if needed)
     environment:
       MONGO_INITDB_ROOT_USERNAME: root  # MongoDB root username
       MONGO_INITDB_ROOT_PASSWORD: password  # MongoDB root password (change to a secure password)
     command: mongod --auth  # Enable MongoDB authentication
 
-volumes:
-  mongodb_data:  # Named volume for MongoDB data persistence
+#volumes:
+#  mongodb_data:  # Named volume for MongoDB data persistence
   
 networks:
   default:
