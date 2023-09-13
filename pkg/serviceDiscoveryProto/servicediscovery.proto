@@ -1,0 +1,47 @@
+syntax = "proto3";
+package protogen;
+import "google/protobuf/timestamp.proto";
+option go_package = "serivceRegisterer";
+
+//service ServiceDiscoveryInit {
+//    rpc RegisterService(RegisterData) returns (ReturnPayload);
+//    rpc DeleteService(ServiceGuid) returns (ReturnPayload);
+//    rpc UpdateServiceHealth(RegisterData) returns (ReturnPayload);
+//    rpc GetAllServices(EmptyRequest) returns (Services);
+//    rpc GetByNameService(ServiceName) returns (Services);
+//}
+
+service ServiceDiscoveryInit{
+    rpc RegisterService(RegisterData) returns (ReturnPayload);
+    rpc DeleteService(ServiceGuid) returns (ReturnPayload);
+    rpc UpdateServiceHealth(RegisterData) returns (ReturnPayload);
+}
+
+service ServiceDiscoveryInfo{
+    rpc GetAllServices(EmptyRequest) returns (Services);
+    rpc GetServiceByName(ServiceName) returns (Services);
+}
+
+message EmptyRequest {}
+
+message ServiceName {
+    string name = 1;
+}
+message ServiceGuid {
+    string guid = 1;
+}
+message ReturnPayload{
+    string data =1;
+}
+
+message Services {
+    repeated RegisterData Services =1;
+}
+
+message RegisterData{
+    string servicename = 1;
+    string serviceaddress = 2;
+    google.protobuf.Timestamp lastupdate =3;
+    repeated string messages = 4 ;
+}
+

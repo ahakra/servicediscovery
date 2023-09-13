@@ -5,9 +5,9 @@ import (
 
 	"net"
 
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/controller"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/database"
-	pb "github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/proto"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/repository"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"

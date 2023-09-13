@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/controller"
-	pb "github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/proto"
+	//pb "github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/proto"
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 )
 
 //serverinit part
@@ -40,7 +41,7 @@ func (sd *ServiceDiscoveryServerInfo) GetAllServices(ctx context.Context, in *pb
 	return py, err
 }
 
-func (sd *ServiceDiscoveryServerInfo) GetByNameService(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
-	py, err := sd.Ctrl.GetByNameService(ctx, in)
+func (sd *ServiceDiscoveryServerInfo) GetServiceByNameSer(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
+	py, err := sd.Ctrl.GetServiceByNameSer(ctx, in)
 	return py, err
 }

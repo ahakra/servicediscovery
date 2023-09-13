@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	pb "github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/proto"
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,7 +15,7 @@ type MongoRepo interface {
 	DeleteService(ctx context.Context, in *pb.ServiceGuid) (*pb.ReturnPayload, error)
 	UpdateServiceHealth(ctx context.Context, in *pb.RegisterData) (*pb.ReturnPayload, error)
 	GetAllServices(ctx context.Context, in *pb.EmptyRequest) (*pb.Services, error)
-	GetByNameService(ctx context.Context, in *pb.ServiceName) (*pb.Services, error)
+	GetServiceByNameSer(ctx context.Context, in *pb.ServiceName) (*pb.Services, error)
 }
 
 type MongoUserRepository struct {
@@ -120,7 +120,7 @@ func (r *MongoUserRepository) GetAllServices(ctx context.Context, in *pb.EmptyRe
 
 }
 
-func (r *MongoUserRepository) GetByNameService(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
+func (r *MongoUserRepository) GetServiceByNameSer(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
 	// Define the filter to find the document you want to update
 
 	filter := bson.M{"servicename": in.Name}

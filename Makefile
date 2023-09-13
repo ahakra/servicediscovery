@@ -27,5 +27,10 @@ generatepgenerateserviceDiscoveryClientprotoroto:
 
 
 
+protoserivceRegisterer:
+
+	protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./pkg/serviceDiscoveryProto/servicediscovery.proto
+
+
 startmongo:
 	docker start c9b138f95d89
