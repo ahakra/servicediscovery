@@ -16,7 +16,7 @@ services:
 #volumes:
 #  mongodb_data:  # Named volume for MongoDB data persistence
   
-networks:
-  default:
-    external:
-      name: mydockernetwork
+# networks:
+#   default:
+#     external:
+#       name: mydockernetwork
