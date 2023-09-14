@@ -81,18 +81,23 @@ func main() {
 	}
 
 	defer conn.Close()
+
 	initClient := proto.NewServiceDiscoveryInitClient(conn)
 
-	y, err := initClient.RegisterService(context.Background(), registerData)
-	if err != nil {
-
-		fmt.Println(err)
-
-	}
-
-	returnedguid = y.Data
-
 	go func() {
+		for {
+			y, err := initClient.RegisterService(context.Background(), registerData)
+			if err != nil {
+
+				fmt.Println(err)
+
+			} else {
+				returnedguid = y.Data
+				break
+
+			}
+			time.Sleep(10 * time.Second)
+		}
 
 		for {
 			registerData := &proto.RegisterData{
