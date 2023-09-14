@@ -11,15 +11,33 @@ import (
 
 var ErrEnvVarEmpty = errors.New("getenv: environment variable empty")
 
-type Mongodatabase struct {
+type MongoDatabase struct {
 	URL string
+}
+type ServiceDiscvoreyServer struct {
+	Address    string
+	Port       int
+	Database   string
+	Collection string
+}
+
+type LoggerServiceReader struct {
+	Address      string
+	StartingPort int
+	Database     string
+}
+
+type LoggerServiceWriter struct {
+	Address      string
+	StartingPort int
+	Database     string
 }
 
 type Config struct {
-	Database                   Mongodatabase
-	serviceDiscvoeryServerPort int
-	ServiceDiscoveryDatabase   string
-	ServiceDiscoveryCollection string
+	Mongodatabase          MongoDatabase
+	Servicediscvoreyserver ServiceDiscvoreyServer
+	Loggerservicereader    LoggerServiceReader
+	Loggerservicewriter    LoggerServiceWriter
 }
 
 func LoadEnv(fileName string) {
@@ -34,18 +52,43 @@ func LoadEnv(fileName string) {
 }
 
 func New() *Config {
-	serviceport, err := getenvInt("SERVICE_DISCOVERY_SERVER_PORT")
+	serviceserverport, err := getenvInt("SERVICE_DISCOVERY_SERVER_PORT")
+
 	if err != nil {
 		return &Config{}
 	}
+	loggerservicereaderstartingport, err := getenvInt("LOGGER_SERVICE_READER_STARTINGPORT")
+
+	if err != nil {
+		return &Config{}
+	}
+	loggerservicewriterstartingport, err := getenvInt("LOGGER_SERVICE_WRITERSTARTINGPORT")
+
+	if err != nil {
+		return &Config{}
+	}
+
 	return &Config{
-		Database: Mongodatabase{
+
+		Mongodatabase: MongoDatabase{
 			URL: os.Getenv("MONGO_DATABASE_URL"),
 		},
-
-		serviceDiscvoeryServerPort: serviceport,
-		ServiceDiscoveryDatabase:   os.Getenv("SERVICE_DISCOVERY_DATABASE"),
-		ServiceDiscoveryCollection: os.Getenv("services"),
+		Servicediscvoreyserver: ServiceDiscvoreyServer{
+			Database:   os.Getenv("SERVICE_DISCOVERY_DATABASE"),
+			Collection: os.Getenv("SERVICE_DISCOVERY_SERVER_COllECTION"),
+			Port:       serviceserverport,
+			Address:    os.Getenv("SERVICE_DISCOVERY_SERVER_ADDRESS"),
+		},
+		Loggerservicereader: LoggerServiceReader{
+			Address:      os.Getenv("LOGGER_DISCOVERY_READER_ADDRESS"),
+			Database:     os.Getenv("LOGGER_DISCOVERY_READER_DATABASE"),
+			StartingPort: loggerservicereaderstartingport,
+		},
+		Loggerservicewriter: LoggerServiceWriter{
+			Address:      os.Getenv("LOGGER_DISCOVERY_WRITER_ADDRESS"),
+			Database:     os.Getenv("LOGGER_DISCOVERY_WRITER_DATABASE"),
+			StartingPort: loggerservicewriterstartingport,
+		},
 	}
 }
 
