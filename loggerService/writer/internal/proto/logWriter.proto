@@ -8,15 +8,23 @@ import "google/protobuf/timestamp.proto";
 
 
 service Logwriter {
-    rpc SaveLog(LogData) returns (google.protobuf.Empty) {};
+    rpc SaveLog(LogPayload) returns (google.protobuf.Empty) {};
+}
+
+message LogPayload {
+    CollectionName collectionName =1;
+    LogData logData =2;
+}
+
+message CollectionName {
+    string name =1;
 }
 
 
 message LogData{
-    string collectionName = 1;
-    LogType logType =2;
-    map<string,  string>  data = 3;
-    google.protobuf.Timestamp createdAt = 4;
+    LogType logType =1;
+    map<string,  string>  data = 2;
+    google.protobuf.Timestamp createdAt = 3;
 }
 
 enum LogType {

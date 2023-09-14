@@ -10,7 +10,7 @@ import (
 )
 
 type MongoRepo interface {
-	SaveLog(ctx context.Context, lgd *pb.LogData) (*emptypb.Empty, error)
+	SaveLog(ctx context.Context, lgd *pb.LogPayload) (*emptypb.Empty, error)
 }
 
 type MongoLogRepository struct {
@@ -21,10 +21,11 @@ func NewMongoServiceRepository(database *mongo.Database) *MongoLogRepository {
 	return &MongoLogRepository{database: database}
 }
 
-func (r *MongoLogRepository) SaveLog(ctx context.Context, lgd *pb.LogData) (*emptypb.Empty, error) {
+func (r *MongoLogRepository) SaveLog(ctx context.Context, lgd *pb.LogPayload) (*emptypb.Empty, error) {
 
-	collection := r.database.Collection(lgd.CollectionName)
-	lgd.CreatedAt = timestamppb.Now()
-	collection.InsertOne(ctx, lgd)
+	collection := r.database.Collection(lgd.CollectionName.Name)
+
+	lgd.LogData.CreatedAt = timestamppb.Now()
+	collection.InsertOne(ctx, lgd.LogData)
 	return &emptypb.Empty{}, nil
 }
