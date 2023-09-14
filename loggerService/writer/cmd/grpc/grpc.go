@@ -13,9 +13,9 @@ type LogWritter struct {
 	Ctrl *controller.MongoCtrl
 }
 
-func (c *LogWritter) SaveLog(ctx context.Context, in *proto.LogData) (*emptypb.Empty, error) {
+func (c *LogWritter) SaveLog(ctx context.Context, in *proto.LogPayload) (*emptypb.Empty, error) {
 
-	_,err := c.Ctrl.SaveLog(ctx, in)
-	
-	return &emptypb.Empty{},err
+	_, err := c.Ctrl.SaveLog(ctx, in)
+
+	return &emptypb.Empty{}, err
 }

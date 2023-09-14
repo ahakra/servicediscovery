@@ -16,7 +16,7 @@ func NewMongoCtrl(mr repository.MongoRepo) *MongoCtrl {
 	return &MongoCtrl{MongoRepo: mr}
 }
 
-func (mc *MongoCtrl) SaveLog(ctx context.Context, in *pb.LogData) (*emptypb.Empty, error) {
+func (mc *MongoCtrl) SaveLog(ctx context.Context, in *pb.LogPayload) (*emptypb.Empty, error) {
 	_, err := mc.MongoRepo.SaveLog(ctx, in)
 	return &emptypb.Empty{}, err
 }
