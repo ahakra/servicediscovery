@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ahakra/servicediscovery/config"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/controller"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/database"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
@@ -25,15 +26,17 @@ const uri = "mongodb://root:password@localhost:27017"
 const serviceDiscoveryPort = 1080
 
 var returnedguid string
-var port = 8111
 
 func main() {
 	//creating a channel to pass when Ctrl+C is pressed
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	
-	db := database.Connect(uri, "loggerservice")
+	config.LoadEnv(".env")
+	conf := config.New()
+	var port = conf.Loggerservicewriter.StartingPort
+
+	db := database.Connect(uri, conf.Loggerservicewriter.Database)
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
 
@@ -41,10 +44,7 @@ func main() {
 	server := grpc.NewServer()
 	serviceDiscoveryServerinit := &LogWritter{Ctrl: ctrl}
 	proto.RegisterLogwriterServer(server, serviceDiscoveryServerinit)
-	
 
-	
-	
 	//this is done so port will be dynamically created if port is in use starting from specific port number
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
 	if err != nil {
@@ -66,12 +66,12 @@ func main() {
 	//part for service disover registeration
 	registerData := &proto.RegisterData{
 		Servicename:    "logger_writer",
-		Serviceaddress: "localhost:" + strconv.Itoa(port),
+		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
 	}
 
-	serverAddr := flag.String("addr", "localhost:"+strconv.Itoa(serviceDiscoveryPort), "The server address in the format of host:port")
+	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(serviceDiscoveryPort), "The server address in the format of host:port")
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -100,7 +100,7 @@ func main() {
 		for {
 			registerData := &proto.RegisterData{
 				Servicename:    "logger_writer",
-				Serviceaddress: "localhost:" + strconv.Itoa(port),
+				Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 				Lastupdate:     timestamppb.Now(),
 				Messages:       []string{"test", "test2"},
 			}
@@ -114,7 +114,6 @@ func main() {
 			time.Sleep(10 * time.Second)
 
 		}
-		defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
 
 	}()
 	go func() {
@@ -127,9 +126,7 @@ func main() {
 		os.Exit(1)
 	}()
 
-
-
-	//log writer service  
+	//log writer service
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 
 	if err := server.Serve(listen); err != nil {
