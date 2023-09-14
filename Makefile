@@ -7,6 +7,8 @@ server:
 logwriter:
 	go run ./loggerService/writer/cmd/grpc/*.go
 
+logreader:
+	go run ./loggerService/reader/cmd/grpc/*.go
 
 generateLogProto:
 	
@@ -25,6 +27,12 @@ generateserviceDiscoveryServerproto:
 generatepgenerateserviceDiscoveryClientprotoroto:
 	protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./serviceDiscoveryClient/proto/serviceDiscovery.proto
 
+
+
+protoserviceRegisterer:
+
+	protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./pkg/serviceDiscoveryProto/servicediscovery.proto
+																										  
 
 
 startmongo:

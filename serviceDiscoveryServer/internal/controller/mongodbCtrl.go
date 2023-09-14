@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	pb "github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/proto"
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/repository"
 )
 
@@ -34,7 +34,7 @@ func (mc *MongoCtrl) GetAllServices(ctx context.Context, in *pb.EmptyRequest) (*
 	py, err := mc.MongoRepo.GetAllServices(ctx, in)
 	return py, err
 }
-func (mc *MongoCtrl) GetByNameService(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
-	py, err := mc.MongoRepo.GetByNameService(ctx, in)
+func (mc *MongoCtrl) GetServiceByNameSer(ctx context.Context, in *pb.ServiceName) (*pb.Services, error) {
+	py, err := mc.MongoRepo.GetServiceByNameSer(ctx, in)
 	return py, err
 }

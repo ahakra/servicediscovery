@@ -1,7 +1,7 @@
 syntax = "proto3";
 package protogen;
 import "google/protobuf/timestamp.proto";
-option go_package = "proto";
+option go_package = "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto";
 
 //service ServiceDiscoveryInit {
 //    rpc RegisterService(RegisterData) returns (ReturnPayload);
@@ -19,7 +19,7 @@ service ServiceDiscoveryInit{
 
 service ServiceDiscoveryInfo{
     rpc GetAllServices(EmptyRequest) returns (Services);
-    rpc GetByNameService(ServiceName) returns (Services);
+    rpc GetServiceByName(ServiceName) returns (Services);
 }
 
 message EmptyRequest {}
@@ -43,5 +43,6 @@ message RegisterData{
     string serviceaddress = 2;
     google.protobuf.Timestamp lastupdate =3;
     repeated string messages = 4 ;
+   
 }
 
