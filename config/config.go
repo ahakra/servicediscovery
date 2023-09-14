@@ -22,12 +22,14 @@ type ServiceDiscvoreyServer struct {
 }
 
 type LoggerServiceReader struct {
+	Name         string
 	Address      string
 	StartingPort int
 	Database     string
 }
 
 type LoggerServiceWriter struct {
+	Name         string
 	Address      string
 	StartingPort int
 	Database     string
@@ -80,11 +82,13 @@ func New() *Config {
 			Address:    os.Getenv("SERVICE_DISCOVERY_SERVER_ADDRESS"),
 		},
 		Loggerservicereader: LoggerServiceReader{
+			Name:         os.Getenv("LOGGER_DISCOVERY_READER_NAME"),
 			Address:      os.Getenv("LOGGER_DISCOVERY_READER_ADDRESS"),
 			Database:     os.Getenv("LOGGER_DISCOVERY_READER_DATABASE"),
 			StartingPort: loggerservicereaderstartingport,
 		},
 		Loggerservicewriter: LoggerServiceWriter{
+			Name:         os.Getenv("LOGGER_DISCOVERY_WRITER_NAME"),
 			Address:      os.Getenv("LOGGER_DISCOVERY_WRITER_ADDRESS"),
 			Database:     os.Getenv("LOGGER_DISCOVERY_WRITER_DATABASE"),
 			StartingPort: loggerservicewriterstartingport,

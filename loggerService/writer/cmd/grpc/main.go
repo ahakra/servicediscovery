@@ -22,9 +22,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const uri = "mongodb://root:password@localhost:27017"
-const serviceDiscoveryPort = 1080
-
 var returnedguid string
 
 func main() {
@@ -34,9 +31,10 @@ func main() {
 
 	config.LoadEnv(".env")
 	conf := config.New()
+	var serviceDiscoveryPort = conf.Servicediscvoreyserver.Port
 	var port = conf.Loggerservicewriter.StartingPort
 
-	db := database.Connect(uri, conf.Loggerservicewriter.Database)
+	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicewriter.Database)
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
 
@@ -65,7 +63,7 @@ func main() {
 	//Section related to registering with servicediscovery service
 	//part for service disover registeration
 	registerData := &proto.RegisterData{
-		Servicename:    "logger_writer",
+		Servicename:    conf.Loggerservicewriter.Name,
 		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
@@ -86,20 +84,17 @@ func main() {
 	y, err := initClient.RegisterService(context.Background(), registerData)
 	if err != nil {
 
-		// fmt.Println(y.Data)
-		returnedguid = y.Data
-		fmt.Println("returned guid: " + returnedguid)
+		fmt.Println(err)
 
 	}
 
 	returnedguid = y.Data
-	fmt.Println("returned guid: " + returnedguid)
 
 	go func() {
 
 		for {
 			registerData := &proto.RegisterData{
-				Servicename:    "logger_writer",
+				Servicename:    conf.Loggerservicewriter.Name,
 				Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 				Lastupdate:     timestamppb.Now(),
 				Messages:       []string{"test", "test2"},
@@ -110,7 +105,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			log.Println("updating service")
+			log.Println("updating " + conf.Loggerservicewriter.Name + " service")
 			time.Sleep(10 * time.Second)
 
 		}
