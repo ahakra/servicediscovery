@@ -74,7 +74,7 @@ func New() *Config {
 			URL: os.Getenv("MONGO_DATABASE_URL"),
 		},
 		Servicediscvoreyserver: ServiceDiscvoreyServer{
-			Database:   os.Getenv("SERVICE_DISCOVERY_DATABASE"),
+			Database:   os.Getenv("SERVICE_DISCOVERY_SERVER_DATABASE"),
 			Collection: os.Getenv("SERVICE_DISCOVERY_SERVER_COllECTION"),
 			Port:       serviceserverport,
 			Address:    os.Getenv("SERVICE_DISCOVERY_SERVER_ADDRESS"),
