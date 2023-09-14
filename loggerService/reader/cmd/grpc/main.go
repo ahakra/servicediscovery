@@ -15,6 +15,7 @@ import (
 	"github.com/ahakra/servicediscovery/config"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/controller"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/database"
+	"github.com/ahakra/servicediscovery/loggerService/reader/internal/handler"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/repository"
 	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
@@ -37,14 +38,14 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicereader.Database)
-
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
+	grpcHandler := handler.NewLogReaderHandler(ctrl)
 
 	//starting logreader service
 	server := grpc.NewServer()
-	serviceDiscoveryServerinit := &LogReader{Ctrl: ctrl}
-	proto.RegisterLogReaderServer(server, serviceDiscoveryServerinit)
+	//serviceDiscoveryServerinit := &LogReader{Ctrl: ctrl}
+	proto.RegisterLogReaderServer(server, grpcHandler)
 
 	//this is done so port will be dynamically created if port is in use starting from specific port number
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
