@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"context"
@@ -9,7 +9,11 @@ import (
 
 type LogReader struct {
 	proto.UnimplementedLogReaderServer
-	Ctrl *controller.MongoCtrl
+	Ctrl controller.IMongoCtrl
+}
+
+func NewLogReaderHandler(mgctrl controller.IMongoCtrl) *LogReader {
+	return &LogReader{Ctrl: mgctrl}
 }
 
 func (c *LogReader) ReadLog(ctx context.Context, in *proto.LogFilter) (*proto.ReturnedData, error) {

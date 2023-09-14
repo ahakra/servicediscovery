@@ -9,6 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type IMongoCtrl interface {
+	ReadLog(ctx context.Context, in *pb.LogFilter) (*pb.ReturnedData, error)
+}
+
 type MongoCtrl struct {
 	MongoRepo repository.MongoRepo
 }

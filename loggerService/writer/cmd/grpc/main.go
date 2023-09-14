@@ -15,6 +15,7 @@ import (
 	"github.com/ahakra/servicediscovery/config"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/controller"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/database"
+	"github.com/ahakra/servicediscovery/loggerService/writer/internal/handler"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/repository"
 	"google.golang.org/grpc"
@@ -37,11 +38,12 @@ func main() {
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicewriter.Database)
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
+	grpcHandler := handler.NewLogReaderHandler(ctrl)
 
 	//starting logwriter service
 	server := grpc.NewServer()
-	serviceDiscoveryServerinit := &LogWritter{Ctrl: ctrl}
-	proto.RegisterLogwriterServer(server, serviceDiscoveryServerinit)
+	//serviceDiscoveryServerinit := &LogWritter{Ctrl: ctrl}
+	proto.RegisterLogwriterServer(server, grpcHandler)
 
 	//this is done so port will be dynamically created if port is in use starting from specific port number
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
