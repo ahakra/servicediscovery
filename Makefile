@@ -7,6 +7,8 @@ server:
 logwriter:
 	go run ./loggerService/writer/cmd/grpc/*.go
 
+logreader:
+	go run ./loggerService/reader/cmd/grpc/*.go
 
 generateLogProto:
 	

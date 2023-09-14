@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -15,10 +17,9 @@ import (
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/database"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/repository"
-	"github.com/ahakra/servicediscovery/pkg/model"
-	clienthelper "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryClientHelper"
 	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -71,66 +72,52 @@ func main() {
 		Messages:       []string{"test", "test2"},
 	}
 
-	conn := model.ConnectionString{
-		Address: conf.Loggerservicereader.Address,
-		Port:    conf.Loggerservicereader.StartingPort,
-	}
+	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(conf.Servicediscvoreyserver.Port), "The server address in the format of host:port")
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	clienthelper := clienthelper.NewServiceDiscoveryClient(&conn)
-	defer clienthelper.Conn.Close()
-	guid, err := clienthelper.RegisterClient(registerData, conf.Loggerservicereader.StartingPort)
-
-	// serverAddr := flag.String("addr", "localhost:"+strconv.Itoa(conf.Servicediscvoreyserver.Port), "The server address in the format of host:port")
-	// var opts []grpc.DialOption
-	// opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	// conn, err := grpc.Dial(*serverAddr, opts...)
-	// if err != nil {
-	// 	log.Fatalf("fail to dial: %v", err)
-	// }
-
-	// defer conn.Close()
-	// initClient := proto.NewServiceDiscoveryInitClient(conn)
-
-	// y, err := initClient.RegisterService(context.Background(), registerData)
-	// if err != nil {
-
-	// 	returnedguid = y.Data
-
-	// }
+	conn, err := grpc.Dial(*serverAddr, opts...)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("fail to dial: %v", err)
 	}
-	returnedguid = guid
 
-	go clienthelper.UpdateClient(registerData)
+	defer conn.Close()
+	initClient := pb.NewServiceDiscoveryInitClient(conn)
 
-	// go func() {
-	// 	defer initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
-	// 	for {
-	// 		registerData := &proto.RegisterData{
-	// 			Servicename:    "logger_reader",
-	// 			Serviceaddress: "localhost:" + strconv.Itoa(port),
-	// 			Lastupdate:     timestamppb.Now(),
-	// 			Messages:       []string{"test", "test2"},
-	// 		}
+	y, err := initClient.RegisterService(context.Background(), registerData)
+	if err != nil {
 
-	// 		_, err := initClient.UpdateServiceHealth(context.Background(), registerData)
+		log.Panic(err)
 
-	// 		if err != nil {
-	// 			fmt.Println(err)
-	// 		}
-	// 		log.Println("updating service")
-	// 		time.Sleep(10 * time.Second)
+	}
+	returnedguid = y.Data
 
-	// 	}
+	go func() {
+		defer initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: returnedguid})
+		for {
+			registerData := &pb.RegisterData{
+				Servicename:    "logger_reader",
+				Serviceaddress: "localhost:" + strconv.Itoa(port),
+				Lastupdate:     timestamppb.Now(),
+				Messages:       []string{"test", "test2"},
+			}
 
-	// }()
+			_, err := initClient.UpdateServiceHealth(context.Background(), registerData)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+			log.Println("updating service")
+			time.Sleep(10 * time.Second)
+
+		}
+
+	}()
 	go func() {
 		sig := <-sigChan
 		fmt.Printf("Received signal: %v\n", sig)
 
-		clienthelper.DeleteClient(registerData)
+		initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: returnedguid})
 		listen.Close()
 
 		os.Exit(1)
