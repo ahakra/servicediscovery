@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"context"
@@ -10,7 +10,11 @@ import (
 
 type LogWritter struct {
 	proto.UnimplementedLogwriterServer
-	Ctrl *controller.MongoCtrl
+	Ctrl controller.IMongoCtrl
+}
+
+func NewLogReaderHandler(mgctrl controller.IMongoCtrl) *LogWritter {
+	return &LogWritter{Ctrl: mgctrl}
 }
 
 func (c *LogWritter) SaveLog(ctx context.Context, in *proto.LogPayload) (*emptypb.Empty, error) {

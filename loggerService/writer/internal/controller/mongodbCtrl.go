@@ -8,6 +8,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+type IMongoCtrl interface {
+	SaveLog(ctx context.Context, in *pb.LogPayload) (*emptypb.Empty, error)
+}
+
 type MongoCtrl struct {
 	MongoRepo repository.MongoRepo
 }
