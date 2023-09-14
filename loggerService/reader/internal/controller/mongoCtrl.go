@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/ahakra/servicediscovery/loggerService/reader/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/repository"
@@ -18,9 +19,11 @@ func NewMongoCtrl(mr repository.MongoRepo) *MongoCtrl {
 
 func (mc *MongoCtrl) ReadLog(ctx context.Context, in *pb.LogFilter) (*pb.ReturnedData, error) {
 	filter := bson.M{}
-
-	if in.LogType.Enum() != nil {
+	log.Println(in.LogType)
+	log.Println(pb.LogType_LOG_TYPE_NIL.Enum())
+	if in.LogType != pb.LogType_LOG_TYPE_NIL && in.LogType.Enum() != nil {
 		filter["logtype"] = in.LogType
+		log.Println("inside enum cond")
 	}
 	if in.DateFrom != nil {
 		filter["createdat.seconds"] = bson.M{

@@ -37,6 +37,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicereader.Database)
+
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
 
@@ -66,7 +67,7 @@ func main() {
 
 	//part for service disover registeration
 	registerData := &pb.RegisterData{
-		Servicename:    "logger_reader",
+		Servicename:    conf.Loggerservicereader.Name,
 		Serviceaddress: conf.Loggerservicereader.Address + ":" + strconv.Itoa(port),
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
@@ -96,8 +97,8 @@ func main() {
 		defer initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: returnedguid})
 		for {
 			registerData := &pb.RegisterData{
-				Servicename:    "logger_reader",
-				Serviceaddress: "localhost:" + strconv.Itoa(port),
+				Servicename:    conf.Loggerservicereader.Name,
+				Serviceaddress: conf.Loggerservicereader.Address + ":" + strconv.Itoa(port),
 				Lastupdate:     timestamppb.Now(),
 				Messages:       []string{"test", "test2"},
 			}
@@ -107,7 +108,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			log.Println("updating service")
+			log.Println("updating " + conf.Loggerservicereader.Name + "  service")
 			time.Sleep(10 * time.Second)
 
 		}

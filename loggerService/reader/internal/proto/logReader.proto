@@ -23,10 +23,11 @@ message LogFilter{
 }
 
 enum LogType {
-    LOG_TYPE_VERBOSE = 0;
-    LOG_TYPE_INFORMATION = 1;
-    LOG_TYPE_WARNING = 2;
-    LOG_TYPE_ERROR = 3;
+    LOG_TYPE_NIL = 0;
+    LOG_TYPE_VERBOSE = 1;
+    LOG_TYPE_INFORMATION = 2;
+    LOG_TYPE_WARNING = 3;
+    LOG_TYPE_ERROR = 4;
 
 }
 
