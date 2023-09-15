@@ -12,12 +12,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ahakra/servicediscovery/config"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/controller"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/database"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/handler"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/reader/internal/repository"
+	"github.com/ahakra/servicediscovery/pkg/config"
 	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

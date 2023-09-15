@@ -6,7 +6,7 @@ import (
 
 	"net"
 
-	"github.com/ahakra/servicediscovery/config"
+	"github.com/ahakra/servicediscovery/pkg/config"
 	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/controller"
 	"github.com/ahakra/servicediscovery/serviceDiscoveryServer/internal/database"
