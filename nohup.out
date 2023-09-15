@@ -1,0 +1,7 @@
+Working Directory: /home/amd/Desktop/servicediscovery
+Server is running on :8111
+2023/09/15 09:41:14 updating LOG_READER  service
+2023/09/15 09:41:24 updating LOG_READER  service
+Received signal: interrupt
+Failed to serve: accept tcp [::]:8111: use of closed network connection
+exit status 1

@@ -33,11 +33,7 @@ protoserviceRegisterer:
 
 	protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./pkg/serviceDiscoveryProto/servicediscovery.proto
 																										  
-runall:
-	go run ./loggerService/reader/cmd/grpc/*.go
-	go run ./loggerService/writer/cmd/grpc/*.go
-	go run ./serviceDiscoveryServer/cmd/grpc/*.go
-	
+
 
 startmongo:
 	docker start c9b138f95d89
