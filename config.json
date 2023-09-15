@@ -1,0 +1,23 @@
+{
+    "MongoDatabase": {
+        "URL": "mongodb://root:password@localhost:27017"
+    },
+    "ServiceDiscoveryServer": {
+        "Port": 1080,
+        "Address": "localhost",
+        "Database": "servicediscovery",
+        "Collection": "services"
+    },
+    "LoggerServiceReader": {
+        "Name": "LOG_READER",
+        "Address": "localhost",
+        "StartingPort": 8111,
+        "Database": "loggerservice"
+    },
+    "LoggerServiceWriter": {
+        "Name": "LOG_WRITER",
+        "Address": "localhost",
+        "StartingPort": 9111,
+        "Database": "loggerservice"
+    }
+}
