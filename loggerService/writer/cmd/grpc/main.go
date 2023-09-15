@@ -30,8 +30,8 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	config.LoadEnv(".env")
-	conf := config.New()
+	conf := config.NewFromJson("config.json")
+
 	var serviceDiscoveryPort = conf.Servicediscvoreyserver.Port
 	var port = conf.Loggerservicewriter.StartingPort
 

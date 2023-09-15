@@ -28,8 +28,7 @@ var returnedguid string
 
 func main() {
 
-	config.LoadEnv(".env")
-	conf := config.New()
+	conf := config.NewFromJson("config.json")
 
 	var port = conf.Loggerservicereader.StartingPort
 
