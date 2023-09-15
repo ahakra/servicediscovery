@@ -16,10 +16,12 @@ import (
 
 func main() {
 
-	config.LoadEnv(".env")
+	// config.LoadEnv(".env")
 
-	conf := config.New()
+	// conf := config.New()
 
+	conf := config.NewFromJson("config.json")
+	fmt.Println(conf)
 	collection := database.Connect(
 		conf.Mongodatabase.URL,
 		conf.Servicediscvoreyserver.Database,
