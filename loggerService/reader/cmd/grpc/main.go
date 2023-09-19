@@ -92,7 +92,7 @@ func main() {
 		}
 	}
 	helper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(port)
-	onRegisterChan <- true
+	onInitServerChan <- true
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 	if err := server.Serve(listen); err != nil {
