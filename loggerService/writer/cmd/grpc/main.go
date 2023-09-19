@@ -18,6 +18,7 @@ import (
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/repository"
 	"github.com/ahakra/servicediscovery/pkg/config"
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -64,7 +65,7 @@ func main() {
 
 	//Section related to registering with servicediscovery service
 	//part for service disover registeration
-	registerData := &proto.RegisterData{
+	registerData := &pb.RegisterData{
 		Servicename:    conf.Loggerservicewriter.Name,
 		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 		Lastupdate:     timestamppb.Now(),
@@ -82,7 +83,7 @@ func main() {
 
 	defer conn.Close()
 
-	initClient := proto.NewServiceDiscoveryInitClient(conn)
+	initClient := pb.NewServiceDiscoveryInitClient(conn)
 
 	go func() {
 		for {
@@ -100,7 +101,7 @@ func main() {
 		}
 
 		for {
-			registerData := &proto.RegisterData{
+			registerData := &pb.RegisterData{
 				Servicename:    conf.Loggerservicewriter.Name,
 				Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
 				Lastupdate:     timestamppb.Now(),
@@ -122,7 +123,7 @@ func main() {
 		sig := <-sigChan
 		fmt.Printf("Received signal: %v\n", sig)
 
-		initClient.DeleteService(context.Background(), &proto.ServiceGuid{Guid: returnedguid})
+		initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: returnedguid})
 		listen.Close()
 
 		os.Exit(1)
