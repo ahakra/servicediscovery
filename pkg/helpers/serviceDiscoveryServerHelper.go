@@ -17,6 +17,7 @@ type HelperData struct {
 	Connection   *grpc.ClientConn
 	Conf         config.Config
 	RegisterData *serviceDiscoveryProto.RegisterData
+	Name         string
 }
 
 // func New(hd *HelperData) *HelperData {
@@ -56,7 +57,7 @@ func (hd *HelperData) UpdateServiceHealth(ctx context.Context) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		log.Println("updating " + hd.Conf.Loggerservicewriter.Name + " service")
+		log.Println("updating " + hd.Name + " service")
 		time.Sleep(10 * time.Second)
 
 	}
