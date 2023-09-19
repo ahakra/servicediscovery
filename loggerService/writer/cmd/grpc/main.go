@@ -66,15 +66,14 @@ func main() {
 		}
 	}
 
-	//Section related to registering with servicediscovery service
-	//part for service disover registeration
-	registerData := &pb.RegisterData{
-		Servicename:    conf.Loggerservicewriter.Name,
-		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
-		Lastupdate:     timestamppb.Now(),
-		Messages:       []string{"test", "test2"},
+	fmt.Println("Server is running on :" + strconv.Itoa(port))
+
+	if err := server.Serve(listen); err != nil {
+		fmt.Println("Failed to serve:", err)
+		return
 	}
 
+	//Register Section for client
 	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(serviceDiscoveryPort), "The server address in the format of host:port")
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -86,6 +85,13 @@ func main() {
 
 	defer conn.Close()
 
+	registerData := &pb.RegisterData{
+		Servicename:    conf.Loggerservicewriter.Name,
+		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
+		Lastupdate:     timestamppb.Now(),
+		Messages:       []string{"test", "test2"},
+	}
+
 	helper := helper.HelperData{
 		Connection:   conn,
 		RegisterData: registerData,
@@ -96,12 +102,5 @@ func main() {
 	go helper.RegisterService(ctx, returnedGuidChan)
 	go helper.UpdateServiceHealth(ctx)
 	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
-
-	fmt.Println("Server is running on :" + strconv.Itoa(port))
-
-	if err := server.Serve(listen); err != nil {
-		fmt.Println("Failed to serve:", err)
-		return
-	}
 
 }
