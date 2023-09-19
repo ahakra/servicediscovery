@@ -19,12 +19,12 @@ type HelperData struct {
 	RegisterData *serviceDiscoveryProto.RegisterData
 }
 
-func New(hd *HelperData) *HelperData {
-	return &HelperData{
-		Connection:   hd.Connection,
-		Conf:         hd.Conf,
-		RegisterData: hd.RegisterData}
-}
+// func New(hd *HelperData) *HelperData {
+// 	return &HelperData{
+// 		Connection:   hd.Connection,
+// 		Conf:         hd.Conf,
+// 		RegisterData: hd.RegisterData}
+// }
 
 func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string) {
 
@@ -36,6 +36,7 @@ func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string)
 			fmt.Println(err)
 
 		} else {
+
 			GuidChan <- y.Data
 			break
 
@@ -44,9 +45,8 @@ func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string)
 	}
 }
 
-func (hd *HelperData) UpdateServiceHealth(ctx context.Context, GuidChan chan string) {
-	retunedGuid := <-GuidChan
-	GuidChan <- retunedGuid
+func (hd *HelperData) UpdateServiceHealth(ctx context.Context) {
+
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		hd.RegisterData.Lastupdate = timestamppb.Now()
@@ -65,6 +65,7 @@ func (hd *HelperData) UpdateServiceHealth(ctx context.Context, GuidChan chan str
 func (hd *HelperData) DeleteService(ctx context.Context, GuidChan chan string, sigChan chan os.Signal) {
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	returnedguid := <-GuidChan
+
 	sig := <-sigChan
 	fmt.Printf("Received signal: %v\n", sig)
 

@@ -16,8 +16,10 @@ import (
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/database"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/handler"
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/proto"
+
 	"github.com/ahakra/servicediscovery/loggerService/writer/internal/repository"
 	"github.com/ahakra/servicediscovery/pkg/config"
+	helper "github.com/ahakra/servicediscovery/pkg/helpers"
 	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -29,6 +31,7 @@ var returnedguid string
 func main() {
 	//creating a channel to pass when Ctrl+C is pressed
 	sigChan := make(chan os.Signal, 1)
+	returnedGuidChan := make(chan string, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	conf := config.NewFromJson("config.json")
@@ -83,53 +86,17 @@ func main() {
 
 	defer conn.Close()
 
-	initClient := pb.NewServiceDiscoveryInitClient(conn)
+	helper := helper.HelperData{
+		Connection:   conn,
+		RegisterData: registerData,
+		Conf:         *conf,
+	}
+	ctx := context.Background()
 
-	go func() {
-		for {
-			y, err := initClient.RegisterService(context.Background(), registerData)
-			if err != nil {
+	go helper.RegisterService(ctx, returnedGuidChan)
+	go helper.UpdateServiceHealth(ctx)
+	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
 
-				fmt.Println(err)
-
-			} else {
-				returnedguid = y.Data
-				break
-
-			}
-			time.Sleep(10 * time.Second)
-		}
-
-		for {
-			registerData := &pb.RegisterData{
-				Servicename:    conf.Loggerservicewriter.Name,
-				Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
-				Lastupdate:     timestamppb.Now(),
-				Messages:       []string{"test", "test2"},
-			}
-
-			_, err := initClient.UpdateServiceHealth(context.Background(), registerData)
-
-			if err != nil {
-				fmt.Println(err)
-			}
-			log.Println("updating " + conf.Loggerservicewriter.Name + " service")
-			time.Sleep(10 * time.Second)
-
-		}
-
-	}()
-	go func() {
-		sig := <-sigChan
-		fmt.Printf("Received signal: %v\n", sig)
-
-		initClient.DeleteService(context.Background(), &pb.ServiceGuid{Guid: returnedguid})
-		listen.Close()
-
-		os.Exit(1)
-	}()
-
-	//log writer service
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 
 	if err := server.Serve(listen); err != nil {
