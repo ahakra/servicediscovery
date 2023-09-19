@@ -32,6 +32,8 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	returnedGuidChan := make(chan string, 1)
+	onInitServerChan := make(chan bool, 1)
+	onRegisterChan := make(chan bool, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicereader.Database)
@@ -67,11 +69,9 @@ func main() {
 	}
 	ctx := context.Background()
 
-	go helper.RegisterService(ctx, returnedGuidChan)
-	go helper.UpdateServiceHealth(ctx)
+	go helper.RegisterService(ctx, returnedGuidChan, onInitServerChan, onRegisterChan)
+	go helper.UpdateServiceHealth(ctx, onRegisterChan)
 	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
-
-	fmt.Println("Server is running on :" + strconv.Itoa(port))
 
 	//starting logreader service
 	server := grpc.NewServer()
@@ -91,7 +91,10 @@ func main() {
 			}
 		}
 	}
+	helper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(port)
+	onRegisterChan <- true
 
+	fmt.Println("Server is running on :" + strconv.Itoa(port))
 	if err := server.Serve(listen); err != nil {
 		fmt.Println("Failed to serve:", err)
 		return

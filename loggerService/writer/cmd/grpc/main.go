@@ -30,6 +30,8 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	returnedGuidChan := make(chan string, 1)
+	onRegisterChan := make(chan bool, 1)
+	onInitServerChan := make(chan bool, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	conf := config.NewFromJson("config.json")
@@ -68,8 +70,8 @@ func main() {
 	}
 	ctx := context.Background()
 
-	go helper.RegisterService(ctx, returnedGuidChan)
-	go helper.UpdateServiceHealth(ctx)
+	go helper.RegisterService(ctx, returnedGuidChan, onInitServerChan, onRegisterChan)
+	go helper.UpdateServiceHealth(ctx, onRegisterChan)
 	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
 
 	//starting logwriter service
@@ -90,6 +92,8 @@ func main() {
 			}
 		}
 	}
+	helper.RegisterData.Serviceaddress = conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port)
+	onRegisterChan <- true
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 	if err := server.Serve(listen); err != nil {

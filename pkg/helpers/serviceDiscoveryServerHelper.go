@@ -27,8 +27,8 @@ type HelperData struct {
 // 		RegisterData: hd.RegisterData}
 // }
 
-func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string) {
-
+func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string, onInit chan bool, onRegister chan bool) {
+	<-onRegister
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		y, err := initClient.RegisterService(ctx, hd.RegisterData)
@@ -39,6 +39,7 @@ func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string)
 		} else {
 
 			GuidChan <- y.Data
+			onRegister <- true
 			break
 
 		}
@@ -46,8 +47,8 @@ func (hd *HelperData) RegisterService(ctx context.Context, GuidChan chan string)
 	}
 }
 
-func (hd *HelperData) UpdateServiceHealth(ctx context.Context) {
-
+func (hd *HelperData) UpdateServiceHealth(ctx context.Context, onRegister chan bool) {
+	<-onRegister
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		hd.RegisterData.Lastupdate = timestamppb.Now()
@@ -71,6 +72,6 @@ func (hd *HelperData) DeleteService(ctx context.Context, GuidChan chan string, s
 	fmt.Printf("Received signal: %v\n", sig)
 
 	initClient.DeleteService(context.Background(), &serviceDiscoveryProto.ServiceGuid{Guid: returnedguid})
-
+	hd.Connection.Close()
 	os.Exit(1)
 }
