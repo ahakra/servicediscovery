@@ -13,6 +13,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type ChannelData struct {
+	OnInitChan      chan bool
+	OnRegisterChan  chan bool
+	RetunedGuidChan chan string
+}
 type HelperData struct {
 	Connection   *grpc.ClientConn
 	Conf         config.Config
@@ -27,8 +32,8 @@ type HelperData struct {
 // 		RegisterData: hd.RegisterData}
 // }
 
-func (hd HelperData) RegisterService(ctx context.Context, GuidChan chan string, onInit chan bool, onRegister chan bool) {
-	<-onInit
+func (hd HelperData) RegisterService(ctx context.Context, cd ChannelData) {
+	<-cd.OnInitChan
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		y, err := initClient.RegisterService(ctx, hd.RegisterData)
@@ -38,8 +43,8 @@ func (hd HelperData) RegisterService(ctx context.Context, GuidChan chan string, 
 
 		} else {
 
-			GuidChan <- y.Data
-			onRegister <- true
+			cd.RetunedGuidChan <- y.Data
+			cd.OnRegisterChan <- true
 			break
 
 		}
@@ -47,8 +52,8 @@ func (hd HelperData) RegisterService(ctx context.Context, GuidChan chan string, 
 	}
 }
 
-func (hd HelperData) UpdateServiceHealth(ctx context.Context, onRegister chan bool) {
-	<-onRegister
+func (hd HelperData) UpdateServiceHealth(ctx context.Context, cd ChannelData) {
+	<-cd.OnRegisterChan
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		hd.RegisterData.Lastupdate = timestamppb.Now()
@@ -64,9 +69,9 @@ func (hd HelperData) UpdateServiceHealth(ctx context.Context, onRegister chan bo
 	}
 }
 
-func (hd HelperData) DeleteService(ctx context.Context, GuidChan chan string, sigChan chan os.Signal) {
+func (hd HelperData) DeleteService(ctx context.Context, cd ChannelData, sigChan chan os.Signal) {
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
-	returnedguid := <-GuidChan
+	returnedguid := <-cd.RetunedGuidChan
 
 	sig := <-sigChan
 	fmt.Printf("Received signal: %v\n", sig)

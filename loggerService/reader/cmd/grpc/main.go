@@ -31,9 +31,7 @@ func main() {
 	var port = conf.Loggerservicereader.StartingPort
 
 	sigChan := make(chan os.Signal, 1)
-	returnedGuidChan := make(chan string, 1)
-	onInitServerChan := make(chan bool, 1)
-	onRegisterChan := make(chan bool, 1)
+
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicereader.Database)
@@ -61,17 +59,23 @@ func main() {
 		Messages:       []string{"test", "test2"},
 	}
 
-	helper := helper.HelperData{
+	logReaderHelper := helper.HelperData{
 		Connection:   conn,
 		RegisterData: registerData,
 		Conf:         *conf,
 		Name:         conf.Loggerservicereader.Name,
 	}
+	channelData := helper.ChannelData{
+		OnInitChan:      make(chan bool),
+		OnRegisterChan:  make(chan bool),
+		RetunedGuidChan: make(chan string),
+	}
+
 	ctx := context.Background()
 
-	go helper.RegisterService(ctx, returnedGuidChan, onInitServerChan, onRegisterChan)
-	go helper.UpdateServiceHealth(ctx, onRegisterChan)
-	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
+	go logReaderHelper.RegisterService(ctx, channelData)
+	go logReaderHelper.UpdateServiceHealth(ctx, channelData)
+	go logReaderHelper.DeleteService(ctx, channelData, sigChan)
 
 	//starting logreader service
 	server := grpc.NewServer()
@@ -91,8 +95,8 @@ func main() {
 			}
 		}
 	}
-	helper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(port)
-	onInitServerChan <- true
+	logReaderHelper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(port)
+	channelData.OnInitChan <- true
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 	if err := server.Serve(listen); err != nil {

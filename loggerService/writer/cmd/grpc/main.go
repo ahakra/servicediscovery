@@ -29,12 +29,11 @@ import (
 func main() {
 
 	sigChan := make(chan os.Signal, 1)
-	returnedGuidChan := make(chan string, 1)
-	onRegisterChan := make(chan bool, 1)
-	onInitServerChan := make(chan bool, 1)
+
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	conf := config.NewFromJson("config.json")
+
 	var serviceDiscoveryPort = conf.Servicediscvoreyserver.Port
 	var port = conf.Loggerservicewriter.StartingPort
 
@@ -62,17 +61,23 @@ func main() {
 		Messages:       []string{"test", "test2"},
 	}
 
-	helper := helper.HelperData{
+	logWriterHelper := helper.HelperData{
 		Connection:   conn,
 		RegisterData: registerData,
 		Conf:         *conf,
 		Name:         conf.Loggerservicewriter.Name,
 	}
+	channelData := helper.ChannelData{
+		OnInitChan:      make(chan bool),
+		OnRegisterChan:  make(chan bool),
+		RetunedGuidChan: make(chan string),
+	}
+
 	ctx := context.Background()
 
-	go helper.RegisterService(ctx, returnedGuidChan, onInitServerChan, onRegisterChan)
-	go helper.UpdateServiceHealth(ctx, onRegisterChan)
-	go helper.DeleteService(ctx, returnedGuidChan, sigChan)
+	go logWriterHelper.RegisterService(ctx, channelData)
+	go logWriterHelper.UpdateServiceHealth(ctx, channelData)
+	go logWriterHelper.DeleteService(ctx, channelData, sigChan)
 
 	//starting logwriter service
 	server := grpc.NewServer()
@@ -92,8 +97,8 @@ func main() {
 			}
 		}
 	}
-	helper.RegisterData.Serviceaddress = conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port)
-	onInitServerChan <- true
+	logWriterHelper.RegisterData.Serviceaddress = conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port)
+	channelData.OnInitChan <- true
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
 	if err := server.Serve(listen); err != nil {
