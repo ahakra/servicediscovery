@@ -26,16 +26,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var returnedguid string
-
 func main() {
-	//creating a channel to pass when Ctrl+C is pressed
+
 	sigChan := make(chan os.Signal, 1)
 	returnedGuidChan := make(chan string, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	conf := config.NewFromJson("config.json")
-
 	var serviceDiscoveryPort = conf.Servicediscvoreyserver.Port
 	var port = conf.Loggerservicewriter.StartingPort
 
@@ -46,10 +43,7 @@ func main() {
 
 	//starting logwriter service
 	server := grpc.NewServer()
-	//serviceDiscoveryServerinit := &LogWritter{Ctrl: ctrl}
 	proto.RegisterLogwriterServer(server, grpcHandler)
-
-	//this is done so port will be dynamically created if port is in use starting from specific port number
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
 	if err != nil {
 		for {
@@ -67,7 +61,6 @@ func main() {
 	}
 
 	fmt.Println("Server is running on :" + strconv.Itoa(port))
-
 	if err := server.Serve(listen); err != nil {
 		fmt.Println("Failed to serve:", err)
 		return
