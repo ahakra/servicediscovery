@@ -58,7 +58,7 @@ func main() {
 		Servicename:    conf.Loggerservicereader.Name,
 		Serviceaddress: conf.Loggerservicereader.Address + ":" + strconv.Itoa(conf.Loggerservicereader.StartingPort),
 		Lastupdate:     timestamppb.Now(),
-		Messages:       []string{"test", "test2"},
+		Messages:       conf.Loggerservicereader.Messages,
 	}
 
 	logReaderHelper := helper.HelperData{
@@ -101,7 +101,7 @@ func main() {
 	logReaderHelper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(logServiceReaderPort)
 	channelData.OnInitChan <- true
 
-	fmt.Println("Server is running on :" + strconv.Itoa(logServiceReaderPort))
+	fmt.Println(conf.Loggerservicereader.Name + " server is running on :" + strconv.Itoa(logServiceReaderPort))
 	if err := server.Serve(listen); err != nil {
 		fmt.Println("Failed to serve:", err)
 		return
