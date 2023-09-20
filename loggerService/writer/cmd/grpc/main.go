@@ -77,7 +77,7 @@ func main() {
 
 	go logWriterHelper.RegisterService(ctx, channelData)
 	go logWriterHelper.UpdateServiceHealth(ctx, channelData)
-	go logWriterHelper.DeleteService(ctx, channelData, sigChan)
+	go logWriterHelper.DeleteService(ctx, channelData)
 
 	//starting logwriter service
 	server := grpc.NewServer()

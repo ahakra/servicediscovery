@@ -25,36 +25,38 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var logServiceReaderPort int
+
 func main() {
 
+	channelData := helper.ChannelData{
+		OnInitChan:      make(chan bool),
+		OnRegisterChan:  make(chan bool),
+		RetunedGuidChan: make(chan string),
+		CancelChan:      make(chan os.Signal, 1),
+	}
 	conf := config.NewFromJson("config.json")
-	var port = conf.Loggerservicereader.StartingPort
 
-	sigChan := make(chan os.Signal, 1)
-
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(channelData.CancelChan, syscall.SIGINT, syscall.SIGTERM)
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicereader.Database)
 	repo := repository.NewMongoServiceRepository(db)
 	ctrl := controller.NewMongoCtrl(repo)
 	grpcHandler := handler.NewLogReaderHandler(ctrl)
 
-	//Register client
-	//Register Section for client
 	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(conf.Servicediscvoreyserver.Port), "The server address in the format of host:port")
+
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	log.Println("starting")
+
 	conn, err := grpc.Dial(*serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
 
-	defer conn.Close()
-
 	registerData := &pb.RegisterData{
 		Servicename:    conf.Loggerservicereader.Name,
-		Serviceaddress: conf.Loggerservicereader.Address + ":" + strconv.Itoa(port),
+		Serviceaddress: conf.Loggerservicereader.Address + ":" + strconv.Itoa(conf.Loggerservicereader.StartingPort),
 		Lastupdate:     timestamppb.Now(),
 		Messages:       []string{"test", "test2"},
 	}
@@ -65,40 +67,41 @@ func main() {
 		Conf:         *conf,
 		Name:         conf.Loggerservicereader.Name,
 	}
-	channelData := helper.ChannelData{
-		OnInitChan:      make(chan bool),
-		OnRegisterChan:  make(chan bool),
-		RetunedGuidChan: make(chan string),
-	}
+
+	//Register Section for client
+
+	defer conn.Close()
 
 	ctx := context.Background()
 
 	go logReaderHelper.RegisterService(ctx, channelData)
 	go logReaderHelper.UpdateServiceHealth(ctx, channelData)
-	go logReaderHelper.DeleteService(ctx, channelData, sigChan)
+	go logReaderHelper.DeleteService(ctx, channelData)
 
 	//starting logreader service
 	server := grpc.NewServer()
 	proto.RegisterLogReaderServer(server, grpcHandler)
-	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
+	logServiceReaderPort = conf.Loggerservicereader.StartingPort
+	listen, err := net.Listen("tcp", conf.Loggerservicereader.Address+":"+strconv.Itoa(logServiceReaderPort)) // Specify your desired host and port
 	if err != nil {
 		for {
 
-			listen, err = net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
+			listen, err = net.Listen("tcp", conf.Loggerservicereader.Address+":"+strconv.Itoa(logServiceReaderPort)) // Specify your desired host and port
+
 			if err != nil {
-				port = port + 1
+				logServiceReaderPort = logServiceReaderPort + 1
 				log.Println(err)
 				time.Sleep(1 * time.Second)
-				log.Println(port)
+
 			} else {
 				break
 			}
 		}
 	}
-	logReaderHelper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(port)
+	logReaderHelper.RegisterData.Serviceaddress = conf.Loggerservicereader.Address + ":" + strconv.Itoa(logServiceReaderPort)
 	channelData.OnInitChan <- true
 
-	fmt.Println("Server is running on :" + strconv.Itoa(port))
+	fmt.Println("Server is running on :" + strconv.Itoa(logServiceReaderPort))
 	if err := server.Serve(listen); err != nil {
 		fmt.Println("Failed to serve:", err)
 		return
