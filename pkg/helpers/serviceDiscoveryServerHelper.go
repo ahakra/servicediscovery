@@ -17,6 +17,7 @@ type ChannelData struct {
 	OnInitChan      chan bool
 	OnRegisterChan  chan bool
 	RetunedGuidChan chan string
+	CancelChan      chan os.Signal
 }
 type HelperData struct {
 	Connection   *grpc.ClientConn
@@ -69,11 +70,11 @@ func (hd HelperData) UpdateServiceHealth(ctx context.Context, cd ChannelData) {
 	}
 }
 
-func (hd HelperData) DeleteService(ctx context.Context, cd ChannelData, sigChan chan os.Signal) {
+func (hd HelperData) DeleteService(ctx context.Context, cd ChannelData) {
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	returnedguid := <-cd.RetunedGuidChan
 
-	sig := <-sigChan
+	sig := <-cd.CancelChan
 	fmt.Printf("Received signal: %v\n", sig)
 
 	initClient.DeleteService(context.Background(), &serviceDiscoveryProto.ServiceGuid{Guid: returnedguid})

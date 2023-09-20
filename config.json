@@ -12,12 +12,14 @@
         "Name": "LOG_READER",
         "Address": "localhost",
         "StartingPort": 8111,
-        "Database": "loggerservice"
+        "Database": "loggerservice",
+        "Messages": ["readLog","readAll"]
     },
     "LoggerServiceWriter": {
         "Name": "LOG_WRITER",
         "Address": "localhost",
         "StartingPort": 9111,
-        "Database": "loggerservice"
+        "Database": "loggerservice",
+        "Messages": ["writeLog","writeAll"]
     }
 }

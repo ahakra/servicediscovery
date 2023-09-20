@@ -23,17 +23,19 @@ type ServiceDiscoveryServer struct {
 }
 
 type LoggerServiceReader struct {
-	Name         string `json:"Name"`
-	Address      string `json:"Address"`
-	StartingPort int    `json:"StartingPort"`
-	Database     string `json:"Database"`
+	Name         string   `json:"Name"`
+	Address      string   `json:"Address"`
+	StartingPort int      `json:"StartingPort"`
+	Database     string   `json:"Database"`
+	Messages     []string `json:"Messages"`
 }
 
 type LoggerServiceWriter struct {
-	Name         string `json:"Name"`
-	Address      string `json:"Address"`
-	StartingPort int    `json:"StartingPort"`
-	Database     string `json:"Database"`
+	Name         string   `json:"Name"`
+	Address      string   `json:"Address"`
+	StartingPort int      `json:"StartingPort"`
+	Database     string   `json:"Database"`
+	Messages     []string `json:"Messages"`
 }
 
 type Config struct {

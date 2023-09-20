@@ -26,16 +26,19 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var logWriterPort int
+
 func main() {
+	channelData := helper.ChannelData{
+		OnInitChan:      make(chan bool),
+		OnRegisterChan:  make(chan bool),
+		RetunedGuidChan: make(chan string),
+		CancelChan:      make(chan os.Signal, 1),
+	}
 
-	sigChan := make(chan os.Signal, 1)
-
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(channelData.CancelChan, syscall.SIGINT, syscall.SIGTERM)
 
 	conf := config.NewFromJson("config.json")
-
-	var serviceDiscoveryPort = conf.Servicediscvoreyserver.Port
-	var port = conf.Loggerservicewriter.StartingPort
 
 	db := database.Connect(conf.Mongodatabase.URL, conf.Loggerservicewriter.Database)
 	repo := repository.NewMongoServiceRepository(db)
@@ -43,7 +46,7 @@ func main() {
 	grpcHandler := handler.NewLogReaderHandler(ctrl)
 
 	//Register Section for client
-	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(serviceDiscoveryPort), "The server address in the format of host:port")
+	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(conf.Servicediscvoreyserver.Port), "The server address in the format of host:port")
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -52,13 +55,11 @@ func main() {
 		log.Fatalf("fail to dial: %v", err)
 	}
 
-	defer conn.Close()
-
 	registerData := &pb.RegisterData{
 		Servicename:    conf.Loggerservicewriter.Name,
-		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port),
+		Serviceaddress: conf.Loggerservicewriter.Address + ":" + strconv.Itoa(conf.Loggerservicewriter.StartingPort),
 		Lastupdate:     timestamppb.Now(),
-		Messages:       []string{"test", "test2"},
+		Messages:       conf.Loggerservicewriter.Messages,
 	}
 
 	logWriterHelper := helper.HelperData{
@@ -67,40 +68,38 @@ func main() {
 		Conf:         *conf,
 		Name:         conf.Loggerservicewriter.Name,
 	}
-	channelData := helper.ChannelData{
-		OnInitChan:      make(chan bool),
-		OnRegisterChan:  make(chan bool),
-		RetunedGuidChan: make(chan string),
-	}
+
+	defer conn.Close()
 
 	ctx := context.Background()
 
 	go logWriterHelper.RegisterService(ctx, channelData)
 	go logWriterHelper.UpdateServiceHealth(ctx, channelData)
-	go logWriterHelper.DeleteService(ctx, channelData, sigChan)
+	go logWriterHelper.DeleteService(ctx, channelData)
 
 	//starting logwriter service
 	server := grpc.NewServer()
 	proto.RegisterLogwriterServer(server, grpcHandler)
-	listen, err := net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
+	logWriterPort = conf.Loggerservicewriter.StartingPort
+	listen, err := net.Listen("tcp", conf.Loggerservicewriter.Address+":"+strconv.Itoa(logWriterPort)) // Specify your desired host and port
 	if err != nil {
 		for {
 
-			listen, err = net.Listen("tcp", ":"+strconv.Itoa(port)) // Specify your desired host and port
+			listen, err = net.Listen("tcp", conf.Loggerservicewriter.Address+":"+strconv.Itoa(logWriterPort)) // Specify your desired host and port
 			if err != nil {
-				port = port + 1
+				logWriterPort = logWriterPort + 1
 				log.Println(err)
 				time.Sleep(1 * time.Second)
-				log.Println(port)
+
 			} else {
 				break
 			}
 		}
 	}
-	logWriterHelper.RegisterData.Serviceaddress = conf.Loggerservicewriter.Address + ":" + strconv.Itoa(port)
+	logWriterHelper.RegisterData.Serviceaddress = conf.Loggerservicewriter.Address + ":" + strconv.Itoa(logWriterPort)
 	channelData.OnInitChan <- true
 
-	fmt.Println("Server is running on :" + strconv.Itoa(port))
+	fmt.Println(conf.Loggerservicewriter.Name + " server is running on :" + strconv.Itoa(logWriterPort))
 	if err := server.Serve(listen); err != nil {
 		fmt.Println("Failed to serve:", err)
 		return
