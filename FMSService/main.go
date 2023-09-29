@@ -13,6 +13,7 @@ func main() {
 			SetMaxDynamicRecordTypeDirs(1000).
 			SetMaxFilesPerFolder(1000).
 			SetFileName("test2.txt").
+			SetData("This is the content of the file.\nHello, World!").
 			Build()
 		//	fmt.Println(err)
 	}

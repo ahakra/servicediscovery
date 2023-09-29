@@ -26,6 +26,7 @@ type FilePath struct {
 	fallBack                 bool
 	maxDynamicRecordTypeDirs int
 	maxFilesPerFolder        int
+	data                     string
 }
 type TempList struct {
 	array []string
@@ -55,6 +56,11 @@ func (builder *FilePath) SetMaxDynamicRecordTypeDirs(max int) *FilePath {
 
 func (builder *FilePath) SetMaxFilesPerFolder(max int) *FilePath {
 	builder.maxFilesPerFolder = max
+	return builder
+}
+
+func (builder *FilePath) SetData(data string) *FilePath {
+	builder.data = data
 	return builder
 }
 func (ffp *FilePath) Build() error {
@@ -330,7 +336,7 @@ func (ffp *FilePath) GetOrCreateFilePath() error {
 }
 
 func (ffp *FilePath) SaveData() error {
-	content := []byte("This is the content of the file.\nHello, World!")
+	content := []byte(ffp.data)
 	finalFile := path.Join(ffp.filePath, ffp.fileName)
 
 	err := ioutil.WriteFile(finalFile, content, 0644)
