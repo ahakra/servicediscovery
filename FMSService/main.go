@@ -7,9 +7,12 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 )
+
+var wg sync.WaitGroup
 
 const rootDir = "C:\\Users\\ahmad.akra\\Desktop\\goTesting\\DB"
 const rootDirLinux = "/home/amd/Desktop/ServiceDiscovery/DB"
@@ -26,6 +29,10 @@ type FilePath struct {
 	fallBack                 bool
 	maxDynamicRecordTypeDirs int
 	maxFilesPerFolder        int
+}
+type TempList struct {
+	array []string
+	mu    *sync.Mutex
 }
 
 var errCannotCreateRootdir = errors.New("cann't create root dir: ")
@@ -168,34 +175,47 @@ func (ffp *FilePath) GetOrCreateRecordTypeDir() error {
 	return ffp.GetOrCreateDynamicRecordTypeDirs()
 }
 func (ffp *FilePath) CreateDynamicRecordTypeDirFallBack() error {
-
+	templist := &TempList{
+		array: []string{},
+		mu:    &sync.Mutex{},
+	}
 	if ffp.fallBack {
 
 		dynamicRecordType := false
 
 		for _, dynamicRecordTypeDir := range ffp.recordTypeDirs {
-			index := strings.Index(dynamicRecordTypeDir, ffp.recordType)
-			currentDyanmicRecordTypeDir := dynamicRecordTypeDir[:index+len(ffp.recordType)]
+			wg.Add(1)
+			go func(dynamicRecordTypeDir string) error {
+				defer wg.Done()
 
-			entries, err := os.ReadDir(currentDyanmicRecordTypeDir)
-			if err != nil {
-				return err
-			}
-			if len(entries) < ffp.maxDynamicRecordTypeDirs {
-				dynamicRecordTypePath := path.Join(currentDyanmicRecordTypeDir, uuid.NewString())
+				index := strings.Index(dynamicRecordTypeDir, ffp.recordType)
+				currentDyanmicRecordTypeDir := dynamicRecordTypeDir[:index+len(ffp.recordType)]
 
-				err := os.Mkdir(dynamicRecordTypePath, os.ModeDir|os.ModePerm)
+				entries, err := os.ReadDir(currentDyanmicRecordTypeDir)
 				if err != nil {
 					return err
 				}
+				if len(entries) < ffp.maxDynamicRecordTypeDirs {
+					dynamicRecordTypePath := path.Join(currentDyanmicRecordTypeDir, uuid.NewString())
 
-				ffp.fallBackDir = dynamicRecordTypePath
-				ffp.dynamicRecordTypeDirs = append(ffp.dynamicRecordTypeDirs, dynamicRecordTypePath)
-				dynamicRecordType = true
+					err := os.Mkdir(dynamicRecordTypePath, os.ModeDir|os.ModePerm)
+					if err != nil {
+						return err
+					}
+					templist.mu.Lock()
+					ffp.fallBackDir = dynamicRecordTypePath
+					//ffp.dynamicRecordTypeDirs = append(ffp.dynamicRecordTypeDirs, dynamicRecordTypePath)
+					templist.array = append(templist.array, dynamicRecordTypePath)
+					templist.mu.Unlock()
 
-			}
+					dynamicRecordType = true
 
+				}
+				return nil
+			}(dynamicRecordTypeDir)
 		}
+		wg.Wait()
+		ffp.dynamicRecordTypeDirs = templist.array
 		if dynamicRecordType {
 			return ffp.GetOrCreateFilePathFallBack()
 
@@ -208,25 +228,37 @@ func (ffp *FilePath) CreateDynamicRecordTypeDirFallBack() error {
 
 func (ffp *FilePath) GetOrCreateDynamicRecordTypeDirs() error {
 	dynamicRecordTypeDirExists := false
+	templist := &TempList{
+		array: []string{},
+		mu:    &sync.Mutex{},
+	}
 	for _, recordTypeDir := range ffp.recordTypeDirs {
+		wg.Add(1)
+		go func(recordTypeDir string) error {
+			defer wg.Done()
 
-		entries, err := os.ReadDir(recordTypeDir)
-		if err != nil {
-			return err
-		}
-		if len(entries) > 0 {
-			for _, entry := range entries {
+			entries, err := os.ReadDir(recordTypeDir)
+			if err != nil {
+				return err
+			}
+			if len(entries) > 0 {
+				for _, entry := range entries {
 
-				dynamicRecordTypePath := path.Join(recordTypeDir, entry.Name())
+					dynamicRecordTypePath := path.Join(recordTypeDir, entry.Name())
+					templist.mu.Lock()
+					//ffp.dynamicRecordTypeDirs = append(ffp.dynamicRecordTypeDirs, dynamicRecordTypePath)
+					templist.array = append(templist.array, dynamicRecordTypePath)
+					templist.mu.Unlock()
+					dynamicRecordTypeDirExists = true
 
-				ffp.dynamicRecordTypeDirs = append(ffp.dynamicRecordTypeDirs, dynamicRecordTypePath)
-				dynamicRecordTypeDirExists = true
+				}
 
 			}
-
-		}
-
+			return nil
+		}(recordTypeDir)
 	}
+	wg.Wait()
+	ffp.dynamicRecordTypeDirs = templist.array
 	if !dynamicRecordTypeDirExists {
 		dynamicRecordTypePath := path.Join(ffp.recordTypeDirs[0], uuid.NewString())
 		err := os.Mkdir(dynamicRecordTypePath, os.ModeDir|os.ModePerm)
@@ -264,6 +296,7 @@ func (ffp *FilePath) GetOrCreateFilePathFallBack() error {
 func (ffp *FilePath) GetOrCreateFilePath() error {
 	folderToSaveExists := false
 	for _, dynamicrecodTypeDir := range ffp.dynamicRecordTypeDirs {
+
 		entries, err := os.ReadDir(dynamicrecodTypeDir)
 		if err != nil {
 			return err
@@ -315,7 +348,7 @@ func (ffp *FilePath) SaveData() error {
 func main() {
 	for i := 0; i < 100000; i++ {
 		builder := FilePath{}
-		builder.SetRecordType("recordTypeTest").
+		builder.SetRecordType("recordTypeTest2").
 			SetROOTDir(rootDir).
 			SetMaxDynamicRecordTypeDirs(1000).
 			SetMaxFilesPerFolder(1000).
