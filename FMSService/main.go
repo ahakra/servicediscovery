@@ -3,7 +3,6 @@ package main
 //import dynamicbuilder "github.com/ahakra/servicediscovery/FMSService/internal/builder/dynamic"
 import (
 	//"fmt"
-	"sync"
 
 	partitionedbuilder "github.com/ahakra/servicediscovery/FMSService/internal/builder/partitioned"
 	"github.com/google/uuid"
@@ -62,35 +61,27 @@ var testdata = []string{
 }
 
 func main() {
-	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		// builder := dynamicbuilder.FilePath{}
 
-		// builder.SetRecordType("recordTypeTest").
-		// 	SetROOTDir(rootDir).
-		// 	SetMaxDynamicRecordTypeDirs(20).
-		// 	SetMaxFilesPerFolder(20).
-		// 	SetFileName("test2.txt").
-		// 	SetData("This is the content of the file.\nHello, World!").
-		// 	Build()
-		//	fmt.Println(err)
-		go func() {
-			defer wg.Done()
+	// builder := dynamicbuilder.FilePath{}
 
-			partitionedBuilder := partitionedbuilder.NewPartitionedBuilder()
-			partitionedBuilder.SetData(testdata).
-				SetFileName(uuid.New().String() + ".txt").
-				SetRecordType("testRecord").
-				SetDateTimeFormat("2006-01-02 15:04").
-				SetUnifiedDateFormat("20060102").
-				SetSplitter(",").
-				SetRootDir(rootDirLinux).
-				SetStoreType("raw").
-				SetDateTimFieldLocation(1).Build()
+	// builder.SetRecordType("recordTypeTest").
+	// 	SetROOTDir(rootDir).
+	// 	SetMaxDynamicRecordTypeDirs(20).
+	// 	SetMaxFilesPerFolder(20).
+	// 	SetFileName("test2.txt").
+	// 	SetData("This is the content of the file.\nHello, World!").
+	// 	Build()
+	//	fmt.Println(err)
 
-		}()
-	}
+	partitionedBuilder := partitionedbuilder.NewPartitionedBuilder()
+	partitionedBuilder.SetData(testdata).
+		SetFileName(uuid.New().String() + ".txt").
+		SetRecordType("testRecord").
+		SetDateTimeFormat("2006-01-02 15:04").
+		SetUnifiedDateFormat("20060102").
+		SetSplitter(",").
+		SetRootDir(rootDirLinux).
+		SetStoreType("raw").
+		SetDateTimFieldLocation(1).Build()
 
-	wg.Wait()
 }
