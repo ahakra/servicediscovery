@@ -8,10 +8,11 @@ const rootDirLinux = "/home/amd/Desktop/ServiceDiscovery/DB"
 func main() {
 	for i := 0; i < 100000; i++ {
 		builder := builder.FilePath{}
-		builder.SetRecordType("recordTypeTest2").
+
+		builder.SetRecordType("recordTypeTest").
 			SetROOTDir(rootDir).
-			SetMaxDynamicRecordTypeDirs(1000).
-			SetMaxFilesPerFolder(1000).
+			SetMaxDynamicRecordTypeDirs(20).
+			SetMaxFilesPerFolder(20).
 			SetFileName("test2.txt").
 			SetData("This is the content of the file.\nHello, World!").
 			Build()

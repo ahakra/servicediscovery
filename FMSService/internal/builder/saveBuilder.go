@@ -3,6 +3,7 @@ package builder
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -76,6 +77,10 @@ func (ffp *FilePath) Build() error {
 }
 
 func (ffp *FilePath) CreateDynamicDirFallBack() error {
+	templist := &TempList{
+		array: []string{},
+		mu:    &sync.Mutex{},
+	}
 	if ffp.fallBack {
 		ffp.dynamicDirs = []string{}
 		dynamicFolders, err := ioutil.ReadDir(ffp.rootDir)
@@ -85,10 +90,16 @@ func (ffp *FilePath) CreateDynamicDirFallBack() error {
 
 		if len(dynamicFolders) > 0 {
 			for _, dB := range dynamicFolders {
-				dyanmicDir := path.Join(ffp.rootDir, dB.Name())
-				ffp.dynamicDirs = append(ffp.dynamicDirs, dyanmicDir)
+				wg.Add(1)
+				go func(dB fs.FileInfo) {
+					defer wg.Done()
+					dyanmicDir := path.Join(ffp.rootDir, dB.Name())
+					//ffp.dynamicDirs = append(ffp.dynamicDirs, dyanmicDir)
+					templist.array = append(templist.array, dyanmicDir)
+				}(dB)
 			}
-
+			wg.Wait()
+			ffp.dynamicDirs = templist.array
 		}
 		recordTypeDoesNotExists := false
 		if len(ffp.dynamicDirs) > 0 {
@@ -118,18 +129,28 @@ func (ffp *FilePath) CreateDynamicDirFallBack() error {
 
 }
 func (ffp *FilePath) GetOrCreateDynamicFolders() error {
-
+	templist := &TempList{
+		array: []string{},
+		mu:    &sync.Mutex{},
+	}
 	dynamicFolders, err := ioutil.ReadDir(ffp.rootDir)
 	if err != nil {
 		return err
 	}
 
 	if len(dynamicFolders) > 0 {
-		for _, dynamicFolder := range dynamicFolders {
-			dyanmicDir := path.Join(ffp.rootDir, dynamicFolder.Name())
-			ffp.dynamicDirs = append(ffp.dynamicDirs, dyanmicDir)
-		}
 
+		for _, dynamicFolder := range dynamicFolders {
+			wg.Add(1)
+			go func(dynamicFolder fs.FileInfo) {
+				defer wg.Done()
+				dyanmicDir := path.Join(ffp.rootDir, dynamicFolder.Name())
+				templist.array = append(templist.array, dyanmicDir)
+				//ffp.dynamicDirs = append(ffp.dynamicDirs, dyanmicDir)
+			}(dynamicFolder)
+		}
+		wg.Wait()
+		ffp.dynamicDirs = templist.array
 	} else {
 		dyanmicDir := path.Join(ffp.rootDir, uuid.New().String())
 		err = os.Mkdir(dyanmicDir, os.ModeDir|os.ModePerm)
