@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package fmsproto;
+option go_package = "github.com/ahakra/servicediscovery/FMSService/internal/FMSProto";
+
+
+
+
+message Records {
+  string recordType = 1;
+  string fileName = 2;
+  string rootDir = 3;
+  repeated string data = 4;
+  string splitter = 5;
+  int32 dateTimeFieldLocation = 6;
+  string dateTimeFormat = 7;
+  repeated KeyValue dataSlice = 8;
+  string unifiedDateFormat = 9;
+  string storeType = 10;
+}
+
+
+message KeyValue {
+  string key = 1;
+   string values = 2;
+}

@@ -6,116 +6,139 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
+	FMSProto "github.com/ahakra/servicediscovery/FMSService/internal/FMSProto"
 	"github.com/google/uuid"
 )
 
-var wg sync.WaitGroup
+//var wg sync.WaitGroup
 
-type Records struct {
-	recordType            string
-	fileName              string
-	rootDir               string
-	data                  string
-	splitter              string
-	dateTimeFieldLocation int
-	dateTimeFormat        string
-	dataSlice             map[string][]string
-	unifiedDateFormat     string
+// type Records struct {
+// 	RecordType            string
+// 	fileName              string
+// 	RootDir               string
+// 	data                  []string
+// 	splitter              string
+// 	dateTimeFieldLocation int
+// 	dateTimeFormat        string
+// 	dataSlice             map[string][]string
+// 	unifiedDateFormat     string
+// }
+
+type PartitionedBuilder struct {
+	settings *FMSProto.Records
 }
 
-func (builder *Records) SetROOTDir(rootDir string) *Records {
-	builder.rootDir = rootDir
+func NewPartitionedBuilder() *PartitionedBuilder {
+	return &PartitionedBuilder{
+		settings: &FMSProto.Records{},
+	}
+}
+
+func (builder *PartitionedBuilder) SetRootDir(RootDir string) *PartitionedBuilder {
+	builder.settings.RootDir = RootDir
 	return builder
 }
-func (builder *Records) SetRecordType(recordType string) *Records {
-	builder.recordType = recordType
-	return builder
-}
-
-func (builder *Records) SetFileName(fileName string) *Records {
-	builder.fileName = fileName
-	return builder
-}
-
-func (builder *Records) SetData(data string) *Records {
-	builder.data = data
-	return builder
-}
-
-func (builder *Records) SetSplitter(splitter string) *Records {
-	builder.splitter = splitter
+func (builder *PartitionedBuilder) SetRecordType(RecordType string) *PartitionedBuilder {
+	builder.settings.RecordType = RecordType
 	return builder
 }
 
-func (builder *Records) SetDateTimFieldLocation(location int) *Records {
-	builder.dateTimeFieldLocation = location
-	return builder
-}
-func (builder *Records) SetDateTimeFormat(dateTimeFormat string) *Records {
-	builder.dateTimeFormat = dateTimeFormat
+func (builder *PartitionedBuilder) SetFileName(fileName string) *PartitionedBuilder {
+	builder.settings.FileName = fileName
 	return builder
 }
 
-func (builder *Records) SetUnifiedDateFormat(unifiedDateFormat string) *Records {
-	builder.unifiedDateFormat = unifiedDateFormat
+func (builder *PartitionedBuilder) SetData(data []string) *PartitionedBuilder {
+	builder.settings.Data = data
 	return builder
 }
 
-func (ffp *Records) Build() error {
-	_, err := os.Stat(ffp.rootDir)
+func (builder *PartitionedBuilder) SetSplitter(splitter string) *PartitionedBuilder {
+	builder.settings.Splitter = splitter
+	return builder
+}
+
+func (builder *PartitionedBuilder) SetDateTimFieldLocation(location int32) *PartitionedBuilder {
+	builder.settings.DateTimeFieldLocation = location
+	return builder
+}
+func (builder *PartitionedBuilder) SetDateTimeFormat(dateTimeFormat string) *PartitionedBuilder {
+	builder.settings.DateTimeFormat = dateTimeFormat
+	return builder
+}
+
+func (builder *PartitionedBuilder) SetUnifiedDateFormat(unifiedDateFormat string) *PartitionedBuilder {
+	builder.settings.UnifiedDateFormat = unifiedDateFormat
+	return builder
+}
+
+func (builder *PartitionedBuilder) SetStoreType(storeType string) *PartitionedBuilder {
+	builder.settings.StoreType = storeType
+	return builder
+}
+func (ffp *PartitionedBuilder) Build() error {
+	_, err := os.Stat(ffp.settings.RootDir)
 	if os.IsNotExist(err) {
-		err := os.Mkdir(ffp.rootDir, os.ModeDir|os.ModePerm)
+		err := os.Mkdir(ffp.settings.RootDir, os.ModeDir|os.ModePerm)
 		if err != nil {
 
-			return fmt.Errorf("unable to init rootDir: %v", err)
+			return fmt.Errorf("unable to init RootDir: %v", err)
 		}
 	}
 	return ffp.GetOrCreateRecordTypeDir()
 
 }
 
-func (ffp *Records) GetOrCreateRecordTypeDir() error {
+func (ffp *PartitionedBuilder) GetOrCreateRecordTypeDir() error {
 
-	recordTypeDir := path.Join(ffp.rootDir, ffp.recordType)
-	_, err := os.Stat(recordTypeDir)
+	RecordTypeDir := path.Join(ffp.settings.RootDir, ffp.settings.RecordType)
+	_, err := os.Stat(RecordTypeDir)
 	if os.IsNotExist(err) {
-		err := os.Mkdir(recordTypeDir, os.ModeDir|os.ModePerm)
+		err := os.Mkdir(RecordTypeDir, os.ModeDir|os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("unable to init rootDir: %v", err)
+			return fmt.Errorf("unable to init RootDir: %v", err)
 		}
 	}
 
 	return ffp.SplitRecordsByDate()
 }
 
-func (ffp *Records) SplitRecordsByDate() error {
+func (ffp *PartitionedBuilder) SplitRecordsByDate() error {
 	//result := make(map[string][]string)
-	ffp.dataSlice = make(map[string][]string)
-	records := strings.Split(ffp.data, "\n")
 
-	for _, record := range records {
+	for _, record := range ffp.settings.Data {
 
-		fields := strings.Split(record, ffp.splitter)
+		fields := strings.Split(record, ffp.settings.Splitter)
 
-		if len(fields) > ffp.dateTimeFieldLocation {
+		if len(fields) > int(ffp.settings.DateTimeFieldLocation) {
 			// Parse the date
-			dateStr := fields[ffp.dateTimeFieldLocation]
-			parsedDate, err := time.Parse(ffp.dateTimeFormat, dateStr)
+			dateStr := fields[ffp.settings.DateTimeFieldLocation]
+			parsedDate, err := time.Parse(ffp.settings.DateTimeFormat, dateStr)
 			if err == nil {
 
-				unifiedDateFormat := parsedDate.Format(ffp.unifiedDateFormat)
+				unifiedDateFormat := parsedDate.Format(ffp.settings.UnifiedDateFormat)
+				keyValue := &FMSProto.KeyValue{
+					Key:    unifiedDateFormat,
+					Values: record,
+				}
 
-				ffp.dataSlice[unifiedDateFormat] = append(ffp.dataSlice[unifiedDateFormat], record)
+				ffp.settings.DataSlice = append(ffp.settings.DataSlice, keyValue)
 			} else {
-
-				ffp.dataSlice["invalid"] = append(ffp.dataSlice["invalid"], record)
+				keyValue := &FMSProto.KeyValue{
+					Key:    "invalid",
+					Values: record,
+				}
+				ffp.settings.DataSlice = append(ffp.settings.DataSlice, keyValue)
 			}
 		} else {
 			if len(record) != 0 {
-				ffp.dataSlice["invalid"] = append(ffp.dataSlice["invalid"], record)
+				keyValue := &FMSProto.KeyValue{
+					Key:    "invalid",
+					Values: record,
+				}
+				ffp.settings.DataSlice = append(ffp.settings.DataSlice, keyValue)
 			}
 		}
 	}
@@ -123,31 +146,37 @@ func (ffp *Records) SplitRecordsByDate() error {
 	return ffp.SaveData()
 }
 
-func (ffp *Records) SaveData() error {
+func (ffp *PartitionedBuilder) SaveData() error {
 
-	for key, value := range ffp.dataSlice {
-		fmt.Println("KEYS: ", key)
-		fileDir := path.Join(ffp.rootDir, ffp.recordType, key)
+	// Create a map to store data for each key
+	dataByKeys := make(map[string][]string)
 
-		finalFile := path.Join(fileDir, ffp.fileName)
+	// Iterate through records.DataSlice
+	for _, msgValues := range ffp.settings.DataSlice {
+		dataByKeys[msgValues.Key] = append(dataByKeys[msgValues.Key], msgValues.Values)
+	}
+
+	for key, value := range dataByKeys {
+
+		fileDir := path.Join(ffp.settings.RootDir, ffp.settings.RecordType, ffp.settings.StoreType, key)
+
+		finalFile := path.Join(fileDir, ffp.settings.FileName)
 
 		err := os.MkdirAll(fileDir, os.ModePerm)
 		if err != nil {
 			fmt.Printf("Error creating directory: %v\n", err)
-		} else {
-			fmt.Printf("Directory created successfully: %s\n", key)
 		}
 
 		_, err = os.Stat(finalFile)
 		if !os.IsNotExist(err) {
-			finalFile = path.Join(fileDir, ffp.fileName+"_"+uuid.New().String())
+			finalFile = path.Join(fileDir, ffp.settings.FileName+"_"+uuid.New().String())
 		}
 
 		content := []byte(strings.Join(value, "\n"))
 
 		err = ioutil.WriteFile(finalFile, content, 0644)
 		if err != nil {
-			fmt.Println("Error writing to file:", err)
+
 			return err
 		}
 
