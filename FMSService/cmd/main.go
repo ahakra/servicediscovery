@@ -135,19 +135,13 @@ func main() {
 		Name:         conf.FMSservice.Name,
 	}
 
-	//defer conn.Close()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	defer conn.Close()
 
-		channelData.OnInitChan <- true
-
-	}()
-	wg.Wait()
 	ctx := context.Background()
 
 	go fmsServiceHelper.RegisterService(ctx, channelData)
 	go fmsServiceHelper.UpdateServiceHealth(ctx, channelData)
-	go fmsServiceHelper.DeleteService(ctx, channelData)
+	channelData.OnInitChan <- true
+	fmsServiceHelper.DeleteService(ctx, channelData)
 
 }
