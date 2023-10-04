@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 
 	"github.com/ahakra/servicediscovery/pkg/config"
@@ -72,6 +73,7 @@ var testdata = []string{
 	"aa,2023-08-23 10:33,9617055",
 	"bb,2023-08-25 12:21,9617055",
 }
+var wg sync.WaitGroup
 
 func main() {
 
@@ -134,13 +136,18 @@ func main() {
 	}
 
 	//defer conn.Close()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
+		channelData.OnInitChan <- true
+
+	}()
+	wg.Wait()
 	ctx := context.Background()
 
 	go fmsServiceHelper.RegisterService(ctx, channelData)
 	go fmsServiceHelper.UpdateServiceHealth(ctx, channelData)
 	go fmsServiceHelper.DeleteService(ctx, channelData)
-
-	channelData.OnInitChan <- true
 
 }
