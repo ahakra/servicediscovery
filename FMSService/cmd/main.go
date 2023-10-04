@@ -1,5 +1,22 @@
 package main
 
+import (
+	"context"
+	"flag"
+	"log"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+
+	"github.com/ahakra/servicediscovery/pkg/config"
+	helper "github.com/ahakra/servicediscovery/pkg/helpers"
+	pb "github.com/ahakra/servicediscovery/pkg/serviceDiscoveryProto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/timestamppb"
+)
+
 //import dynamicbuilder "github.com/ahakra/servicediscovery/FMSService/internal/builder/dynamic"
 
 //"fmt"
@@ -80,5 +97,50 @@ func main() {
 	// 	SetRootDir(rootDirLinux).
 	// 	SetStoreType("raw").
 	// 	SetDateTimFieldLocation(1).Build()
+	channelData := helper.ChannelData{
+		OnInitChan:      make(chan bool),
+		OnRegisterChan:  make(chan bool),
+		RetunedGuidChan: make(chan string),
+		CancelChan:      make(chan os.Signal, 1),
+	}
+
+	signal.Notify(channelData.CancelChan, syscall.SIGINT, syscall.SIGTERM)
+
+	conf := config.NewFromJson("config.json")
+	log.Println(conf)
+	//Register Section for client
+	serverAddr := flag.String("addr", conf.Servicediscvoreyserver.Address+":"+strconv.Itoa(conf.Servicediscvoreyserver.Port), "The server address in the format of host:port")
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	conn, err := grpc.Dial(*serverAddr, opts...)
+	log.Println(*serverAddr)
+	if err != nil {
+		log.Fatalf("fail to dial: %v", err)
+	}
+
+	registerData := &pb.RegisterData{
+		Servicename:    conf.FMSservice.Name,
+		Serviceaddress: conf.FMSservice.Address + ":" + strconv.Itoa(conf.FMSservice.StartingPort),
+		Lastupdate:     timestamppb.Now(),
+		Messages:       conf.FMSservice.Messages,
+	}
+
+	fmsServiceHelper := helper.HelperData{
+		Connection:   conn,
+		RegisterData: registerData,
+		Conf:         *conf,
+		Name:         conf.FMSservice.Name,
+	}
+
+	//defer conn.Close()
+
+	ctx := context.Background()
+
+	go fmsServiceHelper.RegisterService(ctx, channelData)
+	go fmsServiceHelper.UpdateServiceHealth(ctx, channelData)
+	go fmsServiceHelper.DeleteService(ctx, channelData)
+
+	channelData.OnInitChan <- true
 
 }

@@ -35,9 +35,11 @@ type HelperData struct {
 
 func (hd HelperData) RegisterService(ctx context.Context, cd ChannelData) {
 	<-cd.OnInitChan
+	fmt.Println("start registering: ", hd.RegisterData.Servicename)
 	initClient := serviceDiscoveryProto.NewServiceDiscoveryInitClient(hd.Connection)
 	for {
 		y, err := initClient.RegisterService(ctx, hd.RegisterData)
+
 		if err != nil {
 
 			fmt.Println(err)
