@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Basic table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+    .Healthy{
+        color:green    
+    }
+    .UnHealthy{
+        color:red    
+    }
+      
+    </style>
+</head>
+<body>
+    <div>
+        
+        <table>
+                    <tr>
+                        <th>Service Name</th>
+                        <th>Service Address</th>
+                           <th>Messages</th>
+                        <th>Last Update</th>
+                     
+                        <th>Status</th>
+                    </tr>
+            {{range.Services}}
+                
+                    <tr>
+                        <td>{{.Servicename}}</td>
+                        <td>{{.Serviceaddress}}</td>
+                        <td>{{.Messages}}</td>
+                        <td>{{.LastUpdate}}</td>    
+                         {{if eq .Status "Healthy"}}                   
+                            <td class="Healthy">{{.Status}}</td>
+                        {{else}}
+                             <td class="UnHealthy">{{.Status}}</td>
+                       {{end}}
+                    </tr>
+              
+            {{end}}
+              </table>
+      
+    </div>
+</body>
+</html>
