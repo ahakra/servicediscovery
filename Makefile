@@ -8,6 +8,9 @@ logwriter:
 logreader:
 	go run ./loggerService/reader/cmd/grpc/*.go
 
+fms:
+	go run ./FMSService/cmd/*.go
+	
 serviceHealth:FORCE
 	go run ./serviceHealth/cmd/web/*.go    
 
@@ -50,3 +53,5 @@ protoserviceRegisterer:
 	protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./pkg/serviceDiscoveryProto/servicediscovery.proto
 																										  
 
+protoFMS:
+	protoc --go_out=.   --go_opt=paths=source_relative ./FMSService/internal/FMSProto/records.proto

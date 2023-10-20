@@ -38,11 +38,19 @@ type LoggerServiceWriter struct {
 	Messages     []string `json:"Messages"`
 }
 
+type FMSService struct {
+	Name         string   `json:"Name"`
+	Address      string   `json:"Address"`
+	StartingPort int      `json:"StartingPort"`
+	Messages     []string `json:"Messages"`
+}
+
 type Config struct {
 	Mongodatabase          MongoDatabase          `json:"MongoDatabase"`
 	Servicediscvoreyserver ServiceDiscoveryServer `json:"ServiceDiscoveryServer"`
 	Loggerservicereader    LoggerServiceReader    `json:"LoggerServiceReader"`
 	Loggerservicewriter    LoggerServiceWriter    `json:"LoggerServiceWriter"`
+	FMSservice             FMSService             `json:"FMSService"`
 }
 
 // type MongoDatabase struct {

@@ -21,5 +21,11 @@
         "StartingPort": 9111,
         "Database": "loggerservice",
         "Messages": ["writeLog","writeAll"]
+    },
+    "FMSService": {
+        "Name": "FMS_STORE_SERVICE",
+        "Address": "localhost",
+        "StartingPort": 0,
+        "Messages": ["storeData"]
     }
 }
