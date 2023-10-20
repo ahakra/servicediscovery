@@ -1,5 +1,3 @@
-client:
-	go run ./serviceDiscoveryClient/*.go
 
 server:
 	go run ./serviceDiscoveryServer/cmd/grpc/*.go
@@ -10,6 +8,10 @@ logwriter:
 logreader:
 	go run ./loggerService/reader/cmd/grpc/*.go
 
+serviceHealth:FORCE
+	go run ./serviceHealth/cmd/web/*.go    
+
+FORCE:
 
 proto:
 		protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=paths=source_relative  ./loggerService/writer/internal/proto/logWriter.proto
@@ -23,6 +25,9 @@ startmongo:
 
 
 ##TBD below
+
+client:
+	go run ./serviceDiscoveryClient/*.go
 
 generateLogProto:
 	
